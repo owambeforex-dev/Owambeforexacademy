@@ -1,38 +1,15 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { GraduationCap, Coins, TrendingUp, Briefcase } from 'lucide-react';
+import { motion } from 'motion/react';
 
-const HomeIcon = ({ size = 20, className = "" }: { size?: number, className?: string }) => (
-  <svg 
-    width={size} 
-    height={size} 
-    viewBox="0 0 1000 1000" 
-    fill="none" 
-    xmlns="http://www.w3.org/2000/svg"
-    className={className}
-  >
-    {/* Black background/shadow diamond */}
-    <rect 
-      x="240" y="240" width="620" height="620" 
-      rx="40" 
-      transform="rotate(45 550 550)" 
-      fill="black" 
-    />
-    {/* Main orange diamond */}
-    <rect 
-      x="140" y="140" width="620" height="620" 
-      rx="40" 
-      transform="rotate(45 450 450)" 
-      fill="#FF9900" 
-    />
-    {/* Center black diamond */}
-    <rect 
-      x="325" y="325" width="250" height="250" 
-      rx="20" 
-      transform="rotate(45 450 450)" 
-      fill="black" 
-    />
-  </svg>
+const HomeIcon = ({ isActive }: { isActive: boolean }) => (
+  <img 
+    src="https://i.imgur.com/569BqEK.png" 
+    alt="Home"
+    className={`w-5 h-5 object-contain transition-all duration-300 ${!isActive ? 'grayscale opacity-70' : 'grayscale-0 opacity-100'}`}
+    referrerPolicy="no-referrer"
+  />
 );
 
 const NAV_ITEMS = [
@@ -57,12 +34,22 @@ export default function MobileBottomNav() {
             <Link
               key={item.name}
               to={item.path}
-              className={`flex flex-col items-center justify-center gap-1 w-full h-full transition-colors ${
-                isActive ? 'text-brand-primary' : 'text-text-secondary'
-              }`}
+              className="w-full h-full"
             >
-              <Icon size={20} strokeWidth={isActive ? 2.5 : 2} />
-              <span className="text-[10px] font-medium">{item.name}</span>
+              <motion.div
+                whileTap={{ y: 4, scale: 0.95 }}
+                transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                className={`flex flex-col items-center justify-center gap-1 w-full h-full transition-colors ${
+                  isActive ? 'text-brand-primary' : 'text-text-secondary'
+                }`}
+              >
+                {item.name === 'Home' ? (
+                  <HomeIcon isActive={isActive} />
+                ) : (
+                  <Icon size={20} strokeWidth={isActive ? 2.5 : 2} />
+                )}
+                <span className="text-[10px] font-medium">{item.name}</span>
+              </motion.div>
             </Link>
           );
         })}
