@@ -5,7 +5,7 @@ import { motion } from 'motion/react';
 
 const HomeIcon = ({ isActive }: { isActive: boolean }) => (
   <img 
-    src="https://i.imgur.com/569BqEK.png" 
+    src="https://i.imgur.com/qp57k4j.png" 
     alt="Home"
     className={`w-5 h-5 object-contain transition-all duration-300 ${!isActive ? 'grayscale opacity-70' : 'grayscale-0 opacity-100'}`}
     referrerPolicy="no-referrer"
