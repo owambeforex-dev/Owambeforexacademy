@@ -6,6 +6,8 @@ import {
   ChevronRight, Lock, Smartphone, Mail, Fingerprint, 
   ShieldCheck, AlertCircle, Clock, Info, Globe
 } from 'lucide-react';
+import { doc, updateDoc } from 'firebase/firestore';
+import { db } from '../firebase/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import StickyHeader from '../components/StickyHeader';
 
@@ -17,9 +19,16 @@ export default function EditProfile() {
   
   // Profile State
   const [username, setUsername] = useState(() => localStorage.getItem('owambe_username') || (userData?.firstName ? `${userData.firstName} ${userData.lastName}` : 'Owambe Trader'));
-  const [profilePic, setProfilePic] = useState<string | null>(() => localStorage.getItem('owambe_profile_pic'));
+  const [profilePic, setProfilePic] = useState<string | null>(() => userData?.profileImage || localStorage.getItem('owambe_profile_pic'));
   const fileInputRef = useRef<HTMLInputElement>(null);
   const uid = currentUser?.uid?.substring(0, 6).toUpperCase() || '938366';
+
+  // Update profilePic when userData changes
+  useEffect(() => {
+    if (userData?.profileImage) {
+      setProfilePic(userData.profileImage);
+    }
+  }, [userData]);
 
   // Verification State
   const [isUS, setIsUS] = useState(false);
@@ -70,14 +79,33 @@ export default function EditProfile() {
 
   const badge = getLevelBadge(trustScore);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Check file size (limit to 1MB for base64 in Firestore)
+      if (file.size > 1024 * 1024) {
+        alert("Image must be smaller than 1MB");
+        return;
+      }
+
       const reader = new FileReader();
-      reader.onloadend = () => {
+      reader.onloadend = async () => {
         const base64 = reader.result as string;
         setProfilePic(base64);
         localStorage.setItem('owambe_profile_pic', base64);
+        
+        // Save to Firestore
+        if (currentUser) {
+          try {
+            const userDocRef = doc(db, 'users', currentUser.uid);
+            await updateDoc(userDocRef, {
+              profileImage: base64,
+              updatedAt: new Date().toISOString()
+            });
+          } catch (error) {
+            console.error("Error updating profile image:", error);
+          }
+        }
       };
       reader.readAsDataURL(file);
     }

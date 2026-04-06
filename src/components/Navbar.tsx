@@ -90,15 +90,23 @@ export default function Navbar() {
           {/* Left Side: User Profile */}
           <div className="flex items-center shrink-0">
             <div className="relative group">
-              <Link to="/profile" className="w-10 h-10 rounded-full bg-brand-primary/10 border border-brand-primary/30 flex items-center justify-center text-brand-primary hover:bg-brand-primary hover:text-bg-primary transition-colors">
-                <User size={20} />
+              <Link to="/profile" className="w-10 h-10 rounded-full bg-brand-primary/10 border border-brand-primary/30 flex items-center justify-center text-brand-primary hover:bg-brand-primary hover:text-bg-primary transition-colors overflow-hidden">
+                {userData?.profileImage ? (
+                  <img src={userData.profileImage} alt="Profile" className="w-full h-full object-cover" />
+                ) : (
+                  <User size={20} />
+                )}
               </Link>
               
               <div className="absolute top-full left-0 mt-2 w-72 bg-surface border border-border-base rounded-xl overflow-hidden shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300">
                 <div className="p-4 border-b border-border-base">
                   <div className="flex items-center gap-3 mb-3">
-                    <Link to="/profile" className="w-12 h-12 rounded-full bg-brand-primary/10 flex items-center justify-center text-brand-primary shrink-0 hover:bg-brand-primary hover:text-brand-dark transition-colors">
-                      <User size={24} />
+                    <Link to="/profile" className="w-12 h-12 rounded-full bg-brand-primary/10 flex items-center justify-center text-brand-primary shrink-0 hover:bg-brand-primary hover:text-brand-dark transition-colors overflow-hidden">
+                      {userData?.profileImage ? (
+                        <img src={userData.profileImage} alt="Profile" className="w-full h-full object-cover" />
+                      ) : (
+                        <User size={24} />
+                      )}
                     </Link>
                     <div className="flex-1 min-w-0">
                       <Link to="/profile" className="text-base font-semibold text-text-primary hover:text-brand-primary transition-colors truncate block">
@@ -171,8 +179,12 @@ export default function Navbar() {
 
         {/* Mobile Navbar Header */}
         <div className="flex md:hidden items-center gap-2 h-16 w-full px-2">
-          <Link to="/profile" className="w-9 h-9 rounded-full bg-brand-primary/10 flex items-center justify-center text-brand-primary shrink-0 border border-brand-primary/20">
-            <User size={20} />
+          <Link to="/profile" className="w-9 h-9 rounded-full bg-brand-primary/10 flex items-center justify-center text-brand-primary shrink-0 border border-brand-primary/20 overflow-hidden">
+            {userData?.profileImage ? (
+              <img src={userData.profileImage} alt="Profile" className="w-full h-full object-cover" />
+            ) : (
+              <User size={20} />
+            )}
           </Link>
 
           <div className="flex-1 min-w-0">

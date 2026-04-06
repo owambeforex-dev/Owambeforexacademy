@@ -5,6 +5,8 @@ import {
   User, Copy, CheckCircle2, Shield, ChevronRight, X, Maximize2, Headset, Settings, Share2, 
   Camera, Upload, ShieldCheck, FileText, Lock, Info, AlertCircle, Clock, UserCircle, MessageCircle
 } from 'lucide-react';
+import { doc, updateDoc } from 'firebase/firestore';
+import { db } from '../firebase/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import StickyHeader from '../components/StickyHeader';
@@ -14,11 +16,18 @@ export default function Profile() {
   const { currentUser, userData } = useAuth();
   const { showToast } = useToast();
   const [copied, setCopied] = useState(false);
-  const [profilePic, setProfilePic] = useState<string | null>(() => localStorage.getItem('owambe_profile_pic'));
+  const [profilePic, setProfilePic] = useState<string | null>(() => userData?.profileImage || localStorage.getItem('owambe_profile_pic'));
   const [verificationStatus, setVerificationStatus] = useState<'Not Verified' | 'Pending' | 'Verified'>(() => {
     if (userData?.identityVerified) return 'Verified';
     return (localStorage.getItem('owambe_kyc_status') as any) || 'Not Verified';
   });
+
+  // Update profilePic when userData changes
+  useEffect(() => {
+    if (userData?.profileImage) {
+      setProfilePic(userData.profileImage);
+    }
+  }, [userData]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const uid = currentUser?.uid?.substring(0, 6).toUpperCase() || '938366';
@@ -31,14 +40,35 @@ export default function Profile() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Check file size (limit to 1MB for base64 in Firestore)
+      if (file.size > 1024 * 1024) {
+        alert("Image must be smaller than 1MB");
+        return;
+      }
+
       const reader = new FileReader();
-      reader.onloadend = () => {
+      reader.onloadend = async () => {
         const base64 = reader.result as string;
         setProfilePic(base64);
         localStorage.setItem('owambe_profile_pic', base64);
+        
+        // Save to Firestore
+        if (currentUser) {
+          try {
+            const userDocRef = doc(db, 'users', currentUser.uid);
+            await updateDoc(userDocRef, {
+              profileImage: base64,
+              updatedAt: new Date().toISOString()
+            });
+            showToast('Profile picture updated');
+          } catch (error) {
+            console.error("Error updating profile image:", error);
+            showToast('Failed to update profile picture');
+          }
+        }
       };
       reader.readAsDataURL(file);
     }

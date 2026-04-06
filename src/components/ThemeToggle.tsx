@@ -4,26 +4,26 @@ import { motion, AnimatePresence } from 'motion/react';
 
 export default function ThemeToggle() {
   const [theme, setTheme] = useState(() => {
-    const saved = localStorage.getItem('theme-mode');
-    return saved || 'system';
+    const saved = localStorage.getItem('theme');
+    return saved || 'dark';
   });
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const applyTheme = () => {
+    const applyTheme = (currentTheme: string) => {
       const root = document.documentElement;
       root.classList.remove('light', 'dark');
       
-      let effectiveTheme = theme;
-      if (theme === 'system') {
+      let effectiveTheme = currentTheme;
+      if (currentTheme === 'system') {
         effectiveTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
       }
       
       root.classList.add(effectiveTheme);
     };
 
-    applyTheme();
+    applyTheme(theme);
 
     function handleClickOutside(event: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -36,7 +36,7 @@ export default function ThemeToggle() {
 
   const handleThemeChange = (newTheme: string) => {
     setTheme(newTheme);
-    localStorage.setItem('theme-mode', newTheme);
+    localStorage.setItem('theme', newTheme);
     setIsOpen(false);
   };
 
