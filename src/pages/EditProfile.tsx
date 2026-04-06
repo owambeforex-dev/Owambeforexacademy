@@ -10,6 +10,7 @@ import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import StickyHeader from '../components/StickyHeader';
+import ProfileImageModal from '../components/ProfileImageModal';
 
 type VerificationMethod = 'NIN' | 'Passport' | 'SSN' | null;
 
@@ -20,7 +21,7 @@ export default function EditProfile() {
   // Profile State
   const [username, setUsername] = useState(() => localStorage.getItem('owambe_username') || (userData?.firstName ? `${userData.firstName} ${userData.lastName}` : 'Owambe Trader'));
   const [profilePic, setProfilePic] = useState<string | null>(() => userData?.profileImage || localStorage.getItem('owambe_profile_pic'));
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const uid = currentUser?.uid?.substring(0, 6).toUpperCase() || '938366';
 
   // Update profilePic when userData changes
@@ -79,39 +80,20 @@ export default function EditProfile() {
 
   const badge = getLevelBadge(trustScore);
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      // Check file size (limit to 1MB for base64 in Firestore)
-      if (file.size > 1024 * 1024) {
-        alert("Image must be smaller than 1MB");
-        return;
-      }
-
-      const reader = new FileReader();
-      const uploadPromise = new Promise<string>((resolve, reject) => {
-        reader.onloadend = () => resolve(reader.result as string);
-        reader.onerror = reject;
-      });
-
-      reader.readAsDataURL(file);
-
+  const handleProfileImageSave = async (image: string) => {
+    setProfilePic(image);
+    localStorage.setItem('owambe_profile_pic', image);
+    
+    // Save to Firestore
+    if (currentUser) {
       try {
-        const base64 = await uploadPromise;
-        setProfilePic(base64);
-        localStorage.setItem('owambe_profile_pic', base64);
-        
-        // Save to Firestore
-        if (currentUser) {
-          const userDocRef = doc(db, 'users', currentUser.uid);
-          await updateDoc(userDocRef, {
-            profileImage: base64,
-            updatedAt: new Date().toISOString()
-          });
-        }
+        const userDocRef = doc(db, 'users', currentUser.uid);
+        await updateDoc(userDocRef, {
+          profileImage: image,
+          updatedAt: new Date().toISOString()
+        });
       } catch (error) {
-        console.error("Error processing/uploading image:", error);
-        alert("Failed to upload image. Please try again.");
+        console.error("Error updating profile image:", error);
       }
     }
   };
@@ -160,7 +142,7 @@ export default function EditProfile() {
           <div className="flex flex-col items-center text-center">
             <div className="relative mb-4">
               <div 
-                onClick={() => fileInputRef.current?.click()}
+                onClick={() => setIsModalOpen(true)}
                 className="w-24 h-24 rounded-full bg-bg-secondary border-4 border-brand-primary/20 flex items-center justify-center overflow-hidden cursor-pointer hover:border-brand-primary transition-all"
               >
                 {profilePic ? (
@@ -172,13 +154,6 @@ export default function EditProfile() {
                   <Camera size={24} className="text-white" />
                 </div>
               </div>
-              <input 
-                type="file" 
-                ref={fileInputRef} 
-                onChange={handleFileChange} 
-                className="hidden" 
-                accept="image/*"
-              />
             </div>
             
             <div className="w-full space-y-3">
@@ -395,6 +370,13 @@ export default function EditProfile() {
             Save Changes
           </button>
         </div>
+
+        <ProfileImageModal 
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          onSave={handleProfileImageSave}
+          currentImage={profilePic}
+        />
 
       </div>
     </div>

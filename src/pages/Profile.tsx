@@ -10,6 +10,7 @@ import { db } from '../firebase/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import StickyHeader from '../components/StickyHeader';
+import ProfileImageModal from '../components/ProfileImageModal';
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -17,6 +18,7 @@ export default function Profile() {
   const { showToast } = useToast();
   const [copied, setCopied] = useState(false);
   const [profilePic, setProfilePic] = useState<string | null>(() => userData?.profileImage || localStorage.getItem('owambe_profile_pic'));
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [verificationStatus, setVerificationStatus] = useState<'Not Verified' | 'Pending' | 'Verified'>(() => {
     if (userData?.identityVerified) return 'Verified';
     return (localStorage.getItem('owambe_kyc_status') as any) || 'Not Verified';
@@ -40,46 +42,24 @@ export default function Profile() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      // Check file size (limit to 1MB for base64 in Firestore)
-      if (file.size > 1024 * 1024) {
-        alert("Image must be smaller than 1MB");
-        return;
-      }
-
-      const reader = new FileReader();
-      const uploadPromise = new Promise<string>((resolve, reject) => {
-        reader.onloadend = () => resolve(reader.result as string);
-        reader.onerror = reject;
-      });
-
-      reader.readAsDataURL(file);
-
+  const handleProfileImageSave = async (image: string) => {
+    setProfilePic(image);
+    localStorage.setItem('owambe_profile_pic', image);
+    
+    // Save to Firestore
+    if (currentUser) {
       try {
-        const base64 = await uploadPromise;
-        setProfilePic(base64);
-        localStorage.setItem('owambe_profile_pic', base64);
-        
-        // Save to Firestore
-        if (currentUser) {
-          const userDocRef = doc(db, 'users', currentUser.uid);
-          await updateDoc(userDocRef, {
-            profileImage: base64,
-            updatedAt: new Date().toISOString()
-          });
-          showToast('Profile picture updated');
-        }
+        const userDocRef = doc(db, 'users', currentUser.uid);
+        await updateDoc(userDocRef, {
+          profileImage: image,
+          updatedAt: new Date().toISOString()
+        });
+        showToast('Profile picture updated');
       } catch (error) {
-        console.error("Error processing/uploading image:", error);
+        console.error("Error updating profile image:", error);
         showToast('Failed to update profile picture');
       }
     }
-  };
-
-  const triggerFileInput = () => {
-    fileInputRef.current?.click();
   };
 
   return (
@@ -104,7 +84,7 @@ export default function Profile() {
           <div className="flex items-center gap-4 mb-4">
             <div className="relative group">
               <div 
-                onClick={triggerFileInput}
+                onClick={() => setIsModalOpen(true)}
                 className="w-20 h-20 rounded-full bg-bg-secondary border-2 border-brand-primary/20 flex items-center justify-center overflow-hidden cursor-pointer hover:border-brand-primary transition-all"
               >
                 {profilePic ? (
@@ -116,13 +96,6 @@ export default function Profile() {
                   <Camera size={20} className="text-white" />
                 </div>
               </div>
-              <input 
-                type="file" 
-                ref={fileInputRef} 
-                onChange={handleFileChange} 
-                className="hidden" 
-                accept="image/*"
-              />
             </div>
             
             <div className="flex-1">
@@ -278,6 +251,13 @@ export default function Profile() {
           <span className="text-[10px] font-medium">Chat</span>
         </button>
       </div>
+
+      <ProfileImageModal 
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSave={handleProfileImageSave}
+        currentImage={profilePic}
+      />
     </div>
   );
 }
