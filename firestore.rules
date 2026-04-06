@@ -1,0 +1,153 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Fields: uid, email, firstName, lastName, role, balance, totalProfit, totalWithdrawal, totalDeposit, referralCode, referredBy, createdAt
+    //
+    // Collection: investments
+    // Fields: userId, planName, amount, status, startDate, endDate
+    //
+    // Collection: deposits
+    // Fields: userId, amount, method, status, proofUrl, createdAt
+    //
+    // Collection: withdrawals
+    // Fields: userId, amount, method, status, address, createdAt
+    //
+    // Collection: accountManagementApplications
+    // Fields: userId, fullName, email, phone, accountType, status, createdAt
+    //
+    // Collection: activityLogs
+    // Fields: userId, action, details, timestamp
+    //
+    // Collection: challenges
+    // Fields: userId, accountSize, platform, status, createdAt
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isDocOwner() {
+      return isAuthenticated() && request.auth.uid == resource.data.userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && 
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+         (request.auth.token.email == "owambeforex@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    function isValidEmail(email) {
+      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+
+    function isValidUser(data) {
+      return hasRequiredFields(['uid', 'email', 'role']) &&
+             data.uid is string &&
+             data.email is string && isValidEmail(data.email) &&
+             data.role in ['user', 'admin'] &&
+             (data.role == 'user' || isAdmin());
+    }
+
+    function isValidInvestment(data) {
+      return hasRequiredFields(['userId', 'planName', 'amount', 'status']) &&
+             data.userId is string &&
+             data.amount is number && data.amount > 0 &&
+             data.status in ['active', 'completed'];
+    }
+
+    function isValidDeposit(data) {
+      return hasRequiredFields(['userId', 'amount', 'status']) &&
+             data.userId is string &&
+             data.amount is number && data.amount > 0 &&
+             data.status in ['pending', 'approved', 'rejected'];
+    }
+
+    function isValidWithdrawal(data) {
+      return hasRequiredFields(['userId', 'amount', 'status']) &&
+             data.userId is string &&
+             data.amount is number && data.amount > 0 &&
+             data.status in ['pending', 'approved', 'rejected'];
+    }
+
+    function isValidApplication(data) {
+      return hasRequiredFields(['userId', 'email', 'status']) &&
+             data.userId is string &&
+             data.email is string && isValidEmail(data.email) &&
+             data.status in ['pending', 'approved', 'rejected'];
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isAuthenticated() && request.auth.uid == userId && isValidUser(request.resource.data);
+      allow update: if (isOwner(userId) && request.resource.data.role == resource.data.role) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /investments/{investmentId} {
+      allow read: if isDocOwner() || isAdmin();
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid && isValidInvestment(request.resource.data);
+      allow update, delete: if isAdmin();
+    }
+
+    match /deposits/{depositId} {
+      allow read: if isDocOwner() || isAdmin();
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid && isValidDeposit(request.resource.data);
+      allow update, delete: if isAdmin();
+    }
+
+    match /withdrawals/{withdrawalId} {
+      allow read: if isDocOwner() || isAdmin();
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid && isValidWithdrawal(request.resource.data);
+      allow update, delete: if isAdmin();
+    }
+
+    match /accountManagementApplications/{appId} {
+      allow read: if isDocOwner() || isAdmin();
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid && isValidApplication(request.resource.data);
+      allow update, delete: if isAdmin();
+    }
+
+    match /activityLogs/{logId} {
+      allow read: if isAdmin();
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAdmin();
+    }
+
+    match /challenges/{challengeId} {
+      allow read: if isDocOwner() || isAdmin();
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAdmin();
+    }
+  }
+}
