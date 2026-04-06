@@ -37,13 +37,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let unsubscribeData: (() => void) | null = null;
+
     const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
       setCurrentUser(user);
       
+      // Clean up previous data subscription if it exists
+      if (unsubscribeData) {
+        unsubscribeData();
+        unsubscribeData = null;
+      }
+
       if (user) {
         // Subscribe to user data in Firestore
         const userDocRef = doc(db, 'users', user.uid);
-        const unsubscribeData = onSnapshot(userDocRef, (docSnap) => {
+        unsubscribeData = onSnapshot(userDocRef, (docSnap) => {
           if (docSnap.exists()) {
             setUserData(docSnap.data());
           } else {
@@ -54,15 +62,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           console.error("Error fetching user data:", error);
           setLoading(false);
         });
-
-        return () => unsubscribeData();
       } else {
         setUserData(null);
         setLoading(false);
       }
     });
 
-    return () => unsubscribeAuth();
+    return () => {
+      unsubscribeAuth();
+      if (unsubscribeData) {
+        unsubscribeData();
+      }
+    };
   }, []);
 
   const logout = async () => {

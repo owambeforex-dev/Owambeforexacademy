@@ -50,27 +50,31 @@ export default function Profile() {
       }
 
       const reader = new FileReader();
-      reader.onloadend = async () => {
-        const base64 = reader.result as string;
+      const uploadPromise = new Promise<string>((resolve, reject) => {
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = reject;
+      });
+
+      reader.readAsDataURL(file);
+
+      try {
+        const base64 = await uploadPromise;
         setProfilePic(base64);
         localStorage.setItem('owambe_profile_pic', base64);
         
         // Save to Firestore
         if (currentUser) {
-          try {
-            const userDocRef = doc(db, 'users', currentUser.uid);
-            await updateDoc(userDocRef, {
-              profileImage: base64,
-              updatedAt: new Date().toISOString()
-            });
-            showToast('Profile picture updated');
-          } catch (error) {
-            console.error("Error updating profile image:", error);
-            showToast('Failed to update profile picture');
-          }
+          const userDocRef = doc(db, 'users', currentUser.uid);
+          await updateDoc(userDocRef, {
+            profileImage: base64,
+            updatedAt: new Date().toISOString()
+          });
+          showToast('Profile picture updated');
         }
-      };
-      reader.readAsDataURL(file);
+      } catch (error) {
+        console.error("Error processing/uploading image:", error);
+        showToast('Failed to update profile picture');
+      }
     }
   };
 

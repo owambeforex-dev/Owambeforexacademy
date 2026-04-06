@@ -87,9 +87,13 @@ export default function Dashboard({ isEmbedded = false }: { isEmbedded?: boolean
               <Bell size={24} />
               <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-brand-primary rounded-full border-2 border-bg-primary"></span>
             </button>
-            <div className="w-10 h-10 rounded-full bg-brand-primary/20 border border-brand-primary/50 flex items-center justify-center text-brand-primary font-bold uppercase">
-              {userData?.firstName?.charAt(0) || 'U'}{userData?.lastName?.charAt(0) || ''}
-            </div>
+            <Link to="/profile" className="w-10 h-10 rounded-full bg-brand-primary/20 border border-brand-primary/50 flex items-center justify-center text-brand-primary font-bold uppercase overflow-hidden">
+              {userData?.profileImage ? (
+                <img src={userData.profileImage} alt="Profile" className="w-full h-full object-cover" />
+              ) : (
+                <>{userData?.firstName?.charAt(0) || 'U'}{userData?.lastName?.charAt(0) || ''}</>
+              )}
+            </Link>
           </div>
         </div>
 

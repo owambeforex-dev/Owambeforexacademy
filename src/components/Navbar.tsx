@@ -57,6 +57,21 @@ export default function Navbar() {
   const { unreadCount } = useNotifications();
   const { showToast } = useToast();
 
+  // Local state for profile image to handle immediate updates and fallbacks
+  const [profileImage, setProfileImage] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Priority: Firestore data > LocalStorage > null
+    if (userData?.profileImage) {
+      setProfileImage(userData.profileImage);
+    } else {
+      const localImage = localStorage.getItem('owambe_profile_pic');
+      if (localImage) {
+        setProfileImage(localImage);
+      }
+    }
+  }, [userData]);
+
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (navRef.current && !navRef.current.contains(event.target as Node)) {
@@ -91,8 +106,8 @@ export default function Navbar() {
           <div className="flex items-center shrink-0">
             <div className="relative group">
               <Link to="/profile" className="w-10 h-10 rounded-full bg-brand-primary/10 border border-brand-primary/30 flex items-center justify-center text-brand-primary hover:bg-brand-primary hover:text-bg-primary transition-colors overflow-hidden">
-                {userData?.profileImage ? (
-                  <img src={userData.profileImage} alt="Profile" className="w-full h-full object-cover" />
+                {profileImage ? (
+                  <img src={profileImage} alt="Profile" className="w-full h-full object-cover" />
                 ) : (
                   <User size={20} />
                 )}
@@ -102,8 +117,8 @@ export default function Navbar() {
                 <div className="p-4 border-b border-border-base">
                   <div className="flex items-center gap-3 mb-3">
                     <Link to="/profile" className="w-12 h-12 rounded-full bg-brand-primary/10 flex items-center justify-center text-brand-primary shrink-0 hover:bg-brand-primary hover:text-brand-dark transition-colors overflow-hidden">
-                      {userData?.profileImage ? (
-                        <img src={userData.profileImage} alt="Profile" className="w-full h-full object-cover" />
+                      {profileImage ? (
+                        <img src={profileImage} alt="Profile" className="w-full h-full object-cover" />
                       ) : (
                         <User size={24} />
                       )}
@@ -180,8 +195,8 @@ export default function Navbar() {
         {/* Mobile Navbar Header */}
         <div className="flex md:hidden items-center gap-2 h-16 w-full px-2">
           <Link to="/profile" className="w-9 h-9 rounded-full bg-brand-primary/10 flex items-center justify-center text-brand-primary shrink-0 border border-brand-primary/20 overflow-hidden">
-            {userData?.profileImage ? (
-              <img src={userData.profileImage} alt="Profile" className="w-full h-full object-cover" />
+            {profileImage ? (
+              <img src={profileImage} alt="Profile" className="w-full h-full object-cover" />
             ) : (
               <User size={20} />
             )}
