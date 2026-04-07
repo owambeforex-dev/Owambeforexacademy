@@ -7,7 +7,7 @@ service cloud.firestore {
     // ===============================================================
     //
     // Collection: users
-    // Fields: uid, email, firstName, lastName, role, balance, totalProfit, totalWithdrawal, totalDeposit, referralCode, referredBy, createdAt, rating, ratedAt
+    // Fields: uid, email, firstName, lastName, role, availableBalance, transferPin, totalProfit, totalWithdrawal, totalDeposit, referralCode, referredBy, services, createdAt
     //
     // Collection: investments
     // Fields: userId, planName, amount, status, startDate, endDate
@@ -17,6 +17,9 @@ service cloud.firestore {
     //
     // Collection: withdrawals
     // Fields: userId, amount, method, status, address, createdAt
+    //
+    // Collection: transactions
+    // Fields: userId, type, subType, amount, recipientId, recipientEmail, senderId, senderEmail, status, createdAt
     //
     // Collection: accountManagementApplications
     // Fields: userId, fullName, email, phone, accountType, status, createdAt
@@ -110,8 +113,19 @@ service cloud.firestore {
     match /users/{userId} {
       allow read: if isOwner(userId) || isAdmin();
       allow create: if isAuthenticated() && request.auth.uid == userId && isValidUser(request.resource.data);
-      allow update: if (isOwner(userId) && request.resource.data.role == resource.data.role) || isAdmin();
+      allow update: if (isOwner(userId) && 
+                       request.resource.data.role == resource.data.role &&
+                       (!('availableBalance' in resource.data) || request.resource.data.availableBalance == resource.data.availableBalance) &&
+                       (!('transferPin' in resource.data) || request.resource.data.transferPin == resource.data.transferPin) &&
+                       (!('services' in resource.data) || request.resource.data.services == resource.data.services)
+                      ) || isAdmin();
       allow delete: if isAdmin();
+    }
+
+    match /transactions/{txId} {
+      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if false;
+      allow update, delete: if isAdmin();
     }
 
     match /investments/{investmentId} {

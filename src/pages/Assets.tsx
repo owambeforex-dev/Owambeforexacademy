@@ -18,17 +18,37 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import StickyHeader from '../components/StickyHeader';
+import { useAuth } from '../contexts/AuthContext';
 
-const MOCK_SERVICES = [
-  { name: 'Investment', status: 'Active', detail: 'Growth Pack', icon: Coins, color: 'text-green-500', path: '/activities/investment' },
-  { name: 'Mentorship', status: 'Active', detail: '3 Month Program', icon: GraduationCap, color: 'text-blue-500', path: '/activities/mentorship' },
-  { name: 'Signal Services', status: 'Active', detail: 'Premium VIP', icon: Zap, color: 'text-yellow-500', path: '/activities/signals' },
-  { name: 'Evaluation', status: 'Inactive', detail: 'No active challenge', icon: Award, color: 'text-purple-500', path: '/activities/evaluation' },
-  { name: 'Account Management', status: 'Expired', detail: 'Last: $5,000 account', icon: Briefcase, color: 'text-orange-500', path: '/activities/account-management' },
+const SERVICES_CONFIG = [
+  { id: 'investment', name: 'Investment', icon: Coins, color: 'text-green-500', path: '/activities/investment', inactiveText: 'No active investment' },
+  { id: 'mentorship', name: 'Mentorship', icon: GraduationCap, color: 'text-blue-500', path: '/activities/mentorship', inactiveText: 'No active mentorship program' },
+  { id: 'signals', name: 'Signal Service', icon: Zap, color: 'text-yellow-500', path: '/activities/signals', inactiveText: 'No active signal service' },
+  { id: 'evaluation', name: 'Evaluation', icon: Award, color: 'text-purple-500', path: '/activities/evaluation', inactiveText: 'No active evaluation' },
+  { id: 'accountManagement', name: 'Account Management', icon: Briefcase, color: 'text-orange-500', path: '/activities/account-management', inactiveText: 'No account management service' },
 ];
 
 export default function Assets() {
+  const { userData } = useAuth();
   const [transactions, setTransactions] = React.useState<any[]>([]);
+
+  const getServiceStatus = (serviceId: string) => {
+    const serviceData = userData?.services?.[serviceId];
+    const config = SERVICES_CONFIG.find(s => s.id === serviceId);
+    
+    if (serviceData) {
+      return {
+        status: 'Active',
+        detail: serviceData.planName || 'Active Plan',
+        isActive: true
+      };
+    }
+    return {
+      status: 'Inactive',
+      detail: config?.inactiveText || 'No active service',
+      isActive: false
+    };
+  };
 
   React.useEffect(() => {
     const saved = localStorage.getItem('owambe_transactions');
@@ -56,16 +76,16 @@ export default function Assets() {
             <Wallet size={16} />
             <span className="text-xs font-medium">Total Balance</span>
           </div>
-          <h1 className="text-3xl font-bold text-text-primary mb-6">$0.00</h1>
+          <h1 className="text-3xl font-bold text-text-primary mb-6">${(userData?.availableBalance || 0).toLocaleString()}</h1>
           
           <div className="grid grid-cols-2 gap-4">
             <div className="bg-bg-secondary/50 rounded-2xl p-4 border border-border-base/50">
               <p className="text-[10px] text-text-muted uppercase font-bold mb-1">Available</p>
-              <p className="text-sm font-bold text-text-primary">$0.00</p>
+              <p className="text-sm font-bold text-text-primary">${(userData?.availableBalance || 0).toLocaleString()}</p>
             </div>
             <div className="bg-bg-secondary/50 rounded-2xl p-4 border border-border-base/50">
               <p className="text-[10px] text-text-muted uppercase font-bold mb-1">Locked</p>
-              <p className="text-sm font-bold text-text-primary">$0.00</p>
+              <p className="text-sm font-bold text-text-primary">${(userData?.lockedBalance || 0).toLocaleString()}</p>
             </div>
           </div>
         </motion.div>
@@ -84,40 +104,46 @@ export default function Assets() {
             </div>
             <span className="text-[10px] font-bold text-text-secondary">Withdraw</span>
           </Link>
-          <button className="flex flex-col items-center gap-2 group">
+          <Link to="/transfer" className="flex flex-col items-center gap-2 group">
             <div className="w-12 h-12 rounded-2xl bg-bg-secondary flex items-center justify-center text-text-secondary group-hover:bg-brand-primary/10 group-hover:text-brand-primary transition-all">
               <Repeat size={24} />
             </div>
             <span className="text-[10px] font-bold text-text-secondary">Transfer</span>
-          </button>
+          </Link>
         </div>
 
         {/* Active Services */}
         <div className="mb-8">
           <h2 className="text-sm font-bold text-text-primary mb-4 px-1">Active Services</h2>
           <div className="space-y-3">
-            {MOCK_SERVICES.map((service, idx) => (
-              <Link key={idx} to={service.path} className="card-base p-4 flex items-center justify-between card-hover block">
-                <div className="flex items-center gap-4">
-                  <div className={`w-10 h-10 rounded-xl bg-bg-secondary flex items-center justify-center ${service.color}`}>
-                    <service.icon size={20} />
+            {SERVICES_CONFIG.map((service) => {
+              const { status, detail, isActive } = getServiceStatus(service.id);
+              return (
+                <Link 
+                  key={service.id} 
+                  to={service.path} 
+                  className="card-base p-4 flex items-center justify-between card-hover block"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className={`w-10 h-10 rounded-xl bg-bg-secondary flex items-center justify-center ${service.color}`}>
+                      <service.icon size={20} />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-text-primary">{service.name}</p>
+                      <p className="text-[10px] text-text-muted">{detail}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm font-bold text-text-primary">{service.name}</p>
-                    <p className="text-[10px] text-text-muted">{service.detail}</p>
+                  <div className="text-right flex items-center gap-2">
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                      isActive ? 'bg-success/10 text-success' : 'bg-bg-secondary text-text-muted'
+                    }`}>
+                      {status}
+                    </span>
+                    <ChevronRight size={14} className="text-text-muted" />
                   </div>
-                </div>
-                <div className="text-right flex items-center gap-2">
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                    service.status === 'Active' ? 'bg-success/10 text-success' : 
-                    service.status === 'Expired' ? 'bg-error/10 text-error' : 'bg-bg-secondary text-text-muted'
-                  }`}>
-                    {service.status}
-                  </span>
-                  <ChevronRight size={14} className="text-text-muted" />
-                </div>
-              </Link>
-            ))}
+                </Link>
+              );
+            })}
           </div>
         </div>
 

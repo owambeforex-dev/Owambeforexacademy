@@ -66,13 +66,13 @@ export default function MobileHome() {
       <div className="px-4 py-6">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-1 text-sm text-text-secondary">
-            <span>Est. Total Value(USD)</span>
+            <span>Total Asset</span>
             <ChevronUp size={14} />
           </div>
         </div>
         
         <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold text-text-primary">${userData?.wallet?.balance?.toLocaleString() || '0.00'}</h1>
+          <h1 className="text-3xl font-bold text-text-primary">${(userData?.availableBalance || 0).toLocaleString()}</h1>
           <div className="flex gap-2">
             <Link 
               to="/deposit-funds"
@@ -87,11 +87,6 @@ export default function MobileHome() {
               Withdraw
             </Link>
           </div>
-        </div>
-
-        <div className="flex items-center gap-1 text-xs text-text-muted mt-4">
-          <span>Expand asset trend chart --</span>
-          <ChevronDown size={14} />
         </div>
       </div>
 

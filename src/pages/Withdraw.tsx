@@ -12,6 +12,7 @@ import {
   X, 
   User, 
   ChevronLeft,
+  ArrowLeft,
   Wallet,
   ArrowRight,
   Info,
@@ -79,8 +80,8 @@ export default function Withdraw() {
   });
 
   const isDetailsLocked = !!userData?.withdrawalDetails;
-  const balance = userData?.wallet?.balance || 0;
-  const isInsufficientFunds = Number(amount) > balance;
+  const availableBalance = userData?.availableBalance || 0;
+  const isInsufficientFunds = Number(amount) > availableBalance;
 
   const filteredBanks = useMemo(() => {
     return BANK_LIST.filter(bank => 
@@ -136,9 +137,10 @@ export default function Withdraw() {
 
       await setDoc(doc(collection(db, 'withdrawals')), withdrawalData);
       
-      // Deduct from balance (In a real app, this should be done on the server)
+      // Deduct from availableBalance
       await updateDoc(doc(db, 'users', currentUser.uid), {
-        'wallet.balance': balance - Number(amount)
+        availableBalance: availableBalance - Number(amount),
+        totalWithdrawal: (userData?.totalWithdrawal || 0) + Number(amount)
       });
 
       setIsSuccess(true);
@@ -220,6 +222,19 @@ export default function Withdraw() {
 
   const renderMethodSelection = () => (
     <div className="space-y-6">
+      <div className="flex items-center justify-between mb-8">
+        <button 
+          onClick={() => navigate(-1)}
+          className="p-2 hover:bg-bg-secondary rounded-full transition-colors"
+        >
+          <ArrowLeft size={24} />
+        </button>
+        <div className="flex items-center gap-2 text-text-muted">
+          <ShieldCheck size={16} />
+          <span className="text-[10px] font-bold uppercase tracking-widest">Secure Withdrawal</span>
+        </div>
+      </div>
+
       <div className="text-center mb-8">
         <h2 className="text-xl font-bold text-text-primary mb-2">Withdraw Funds</h2>
         <p className="text-sm text-text-secondary">Choose your preferred withdrawal method</p>
@@ -418,7 +433,7 @@ export default function Withdraw() {
           <div className="flex items-center justify-between mb-4">
             <label className="text-xs font-bold text-text-muted uppercase tracking-wider">Withdrawal Amount</label>
             <div className="text-[10px] font-bold text-text-secondary">
-              Balance: <span className="text-text-primary">${balance.toLocaleString()}</span>
+              Available: <span className="text-text-primary">${availableBalance.toLocaleString()}</span>
             </div>
           </div>
           

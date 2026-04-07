@@ -10,12 +10,23 @@
         "firstName": { "type": "string" },
         "lastName": { "type": "string" },
         "role": { "type": "string", "enum": ["user", "admin"] },
-        "balance": { "type": "number" },
+        "availableBalance": { "type": "number" },
+        "transferPin": { "type": "string" },
         "totalProfit": { "type": "number" },
         "totalWithdrawal": { "type": "number" },
         "totalDeposit": { "type": "number" },
         "referralCode": { "type": "string" },
         "referredBy": { "type": "string" },
+        "services": {
+          "type": "object",
+          "properties": {
+            "investment": { "type": ["object", "null"] },
+            "mentorship": { "type": ["object", "null"] },
+            "signals": { "type": ["object", "null"] },
+            "evaluation": { "type": ["object", "null"] },
+            "accountManagement": { "type": ["object", "null"] }
+          }
+        },
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["uid", "email", "role"]

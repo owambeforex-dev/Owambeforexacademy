@@ -87,6 +87,18 @@ export default function Auth() {
           role: 'user',
           identityVerified: false,
           myReferralCode: user.uid.substring(0, 8).toUpperCase(),
+          availableBalance: 0,
+          lockedBalance: 0,
+          totalProfit: 0,
+          totalWithdrawal: 0,
+          totalDeposit: 0,
+          services: {
+            investment: null,
+            mentorship: null,
+            signals: null,
+            evaluation: null,
+            accountManagement: null
+          },
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
         });
@@ -139,6 +151,18 @@ export default function Auth() {
           role: 'user',
           identityVerified: false,
           myReferralCode: user.uid.substring(0, 8).toUpperCase(),
+          availableBalance: 0,
+          lockedBalance: 0,
+          totalProfit: 0,
+          totalWithdrawal: 0,
+          totalDeposit: 0,
+          services: {
+            investment: null,
+            mentorship: null,
+            signals: null,
+            evaluation: null,
+            accountManagement: null
+          },
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
         });

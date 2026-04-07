@@ -31,6 +31,8 @@ import SettingsPage from './pages/Settings';
 import EditProfile from './pages/EditProfile';
 import DepositFunds from './pages/DepositFunds';
 import Withdraw from './pages/Withdraw';
+import Transfer from './pages/Transfer';
+import SetTransferPin from './pages/SetTransferPin';
 import Payment from './pages/Payment';
 import Support from './pages/Support';
 import Tickets from './pages/Tickets';
@@ -68,6 +70,8 @@ export default function App() {
             <Route path="payment" element={<Payment />} />
             <Route path="deposit-funds" element={<DepositFunds />} />
             <Route path="withdraw" element={<Withdraw />} />
+            <Route path="transfer" element={<Transfer />} />
+            <Route path="set-transfer-pin" element={<SetTransferPin />} />
             
             {/* New Service Pages */}
             <Route path="services" element={<AllServices />} />

@@ -328,7 +328,7 @@ export default function DepositFunds() {
                 {/* Mobile Bottom Buttons */}
                 <div className="md:hidden pt-12 space-y-4">
                   <button 
-                    onClick={() => navigate('/profile')}
+                    onClick={() => navigate(-1)}
                     className="w-full py-4 flex items-center justify-center gap-2 text-text-secondary hover:text-text-primary transition-colors border border-border-base rounded-xl"
                   >
                     <X size={18} /> Cancel Payment
