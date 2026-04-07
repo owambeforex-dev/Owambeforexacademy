@@ -10,7 +10,7 @@ import { Link, Navigate } from 'react-router-dom';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart as RechartsPieChart, Pie, Cell, Legend } from 'recharts';
 import StickyHeader from '../components/StickyHeader';
 
-const TABS = ['Overview', 'Deposit', 'Withdraw', 'Investment Plans', 'Transactions', 'Referral Program'];
+const TABS = ['Overview', 'Deposit', 'Investment Plans', 'Transactions', 'Referral Program'];
 
 const SMART_ALERTS = [
   "EURUSD approaching major resistance at 1.0950.",
@@ -288,12 +288,12 @@ export default function Dashboard({ isEmbedded = false }: { isEmbedded?: boolean
                       </div>
                       <span className="text-sm font-medium text-gray-300">Deposit</span>
                     </button>
-                    <button onClick={() => setActiveTab('Withdraw')} className="p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 transition-colors flex flex-col items-center justify-center gap-3 group">
+                    <Link to="/withdraw" className="p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 transition-colors flex flex-col items-center justify-center gap-3 group">
                       <div className="w-12 h-12 rounded-full bg-white/5 text-white flex items-center justify-center group-hover:scale-110 transition-transform">
                         <Download size={20} />
                       </div>
                       <span className="text-sm font-medium text-gray-300">Withdraw</span>
-                    </button>
+                    </Link>
                     <Link to="/services/signals" className="p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 transition-colors flex flex-col items-center justify-center gap-3 group">
                       <div className="w-12 h-12 rounded-full bg-white/5 text-white flex items-center justify-center group-hover:scale-110 transition-transform">
                         <Activity size={20} />
@@ -359,50 +359,6 @@ export default function Dashboard({ isEmbedded = false }: { isEmbedded?: boolean
                     <input type="text" name="txHash" required className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white" placeholder="Enter transaction hash" />
                   </div>
                   <button type="submit" className="w-full py-3 bg-brand-primary text-brand-dark font-bold rounded-xl">Submit Deposit Request</button>
-                </form>
-              </div>
-            )}
-
-            {activeTab === 'Withdraw' && (
-              <div className="glass-dark rounded-2xl p-6 border border-white/5">
-                <h3 className="dashboard-title mb-6">Request Withdrawal</h3>
-                <form className="space-y-4" onSubmit={async (e) => {
-                  e.preventDefault();
-                  const form = e.target as HTMLFormElement;
-                  const amount = Number(form.amount.value);
-                  const walletAddress = form.walletAddress.value;
-                  
-                  if (amount > wallet.balance) {
-                    alert('Insufficient balance.');
-                    return;
-                  }
-
-                  try {
-                    await setDoc(doc(collection(db, 'withdrawals')), {
-                      userId: currentUser.uid,
-                      amount: amount,
-                      walletAddress: walletAddress,
-                      method: 'USDT TRC20',
-                      status: 'Pending',
-                      createdAt: new Date().toISOString()
-                    });
-                    alert('Withdrawal request submitted successfully. Please wait for admin approval.');
-                    form.reset();
-                    setActiveTab('Transactions');
-                  } catch (err) {
-                    console.error('Error submitting withdrawal:', err);
-                    alert('Failed to submit withdrawal request.');
-                  }
-                }}>
-                  <div>
-                    <label className="block text-sm text-gray-400 mb-2">Amount (Min $50)</label>
-                    <input type="number" name="amount" min="50" max={wallet.balance} required className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white" placeholder="Enter amount" />
-                  </div>
-                  <div>
-                    <label className="block text-sm text-gray-400 mb-2">Wallet Address (USDT TRC20)</label>
-                    <input type="text" name="walletAddress" required className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white" placeholder="Enter wallet address" />
-                  </div>
-                  <button type="submit" className="w-full py-3 bg-brand-primary text-brand-dark font-bold rounded-xl">Submit Request</button>
                 </form>
               </div>
             )}

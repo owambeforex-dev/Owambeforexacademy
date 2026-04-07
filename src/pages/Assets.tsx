@@ -78,12 +78,12 @@ export default function Assets() {
             </div>
             <span className="text-[10px] font-bold text-text-secondary">Add Funds</span>
           </Link>
-          <button className="flex flex-col items-center gap-2 group">
+          <Link to="/withdraw" className="flex flex-col items-center gap-2 group">
             <div className="w-12 h-12 rounded-2xl bg-bg-secondary flex items-center justify-center text-text-secondary group-hover:bg-brand-primary/10 group-hover:text-brand-primary transition-all">
               <ArrowDownLeft size={24} />
             </div>
             <span className="text-[10px] font-bold text-text-secondary">Withdraw</span>
-          </button>
+          </Link>
           <button className="flex flex-col items-center gap-2 group">
             <div className="w-12 h-12 rounded-2xl bg-bg-secondary flex items-center justify-center text-text-secondary group-hover:bg-brand-primary/10 group-hover:text-brand-primary transition-all">
               <Repeat size={24} />

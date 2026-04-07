@@ -30,6 +30,7 @@ import MarketNews from './pages/MarketNews';
 import SettingsPage from './pages/Settings';
 import EditProfile from './pages/EditProfile';
 import DepositFunds from './pages/DepositFunds';
+import Withdraw from './pages/Withdraw';
 import Payment from './pages/Payment';
 import Support from './pages/Support';
 import Tickets from './pages/Tickets';
@@ -66,6 +67,7 @@ export default function App() {
             <Route path="checkout" element={<Checkout />} />
             <Route path="payment" element={<Payment />} />
             <Route path="deposit-funds" element={<DepositFunds />} />
+            <Route path="withdraw" element={<Withdraw />} />
             
             {/* New Service Pages */}
             <Route path="services" element={<AllServices />} />

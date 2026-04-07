@@ -13,6 +13,7 @@ import {
   Users as UsersIcon,
   Search as SearchIcon
 } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
 import SearchInput from '../SearchInput';
 import MoreNavigationModal from './MoreNavigationModal';
 import LiveTicker from './LiveTicker';
@@ -50,6 +51,7 @@ const QUICK_ACTIONS = [
 
 export default function MobileHome() {
   const navigate = useNavigate();
+  const { userData } = useAuth();
   const [isMoreModalOpen, setIsMoreModalOpen] = React.useState(false);
 
   return (
@@ -70,13 +72,21 @@ export default function MobileHome() {
         </div>
         
         <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold text-text-primary">$0.00</h1>
-          <Link 
-            to="/deposit-funds"
-            className="bg-brand-primary text-bg-primary px-6 py-2.5 rounded-lg font-bold text-[10px] shadow-lg shadow-brand-primary/10"
-          >
-            Add Funds
-          </Link>
+          <h1 className="text-3xl font-bold text-text-primary">${userData?.wallet?.balance?.toLocaleString() || '0.00'}</h1>
+          <div className="flex gap-2">
+            <Link 
+              to="/deposit-funds"
+              className="bg-brand-primary text-bg-primary px-4 py-2.5 rounded-lg font-bold text-[10px] shadow-lg shadow-brand-primary/10"
+            >
+              Add Funds
+            </Link>
+            <Link 
+              to="/withdraw"
+              className="bg-bg-secondary text-text-primary px-4 py-2.5 rounded-lg font-bold text-[10px] border border-border-base"
+            >
+              Withdraw
+            </Link>
+          </div>
         </div>
 
         <div className="flex items-center gap-1 text-xs text-text-muted mt-4">

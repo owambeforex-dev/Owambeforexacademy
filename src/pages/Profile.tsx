@@ -3,7 +3,8 @@ import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   User, Copy, CheckCircle2, Shield, ChevronRight, X, Maximize2, Headset, Settings, Share2, 
-  Camera, Upload, ShieldCheck, FileText, Lock, Info, AlertCircle, Clock, UserCircle, MessageCircle
+  Camera, Upload, ShieldCheck, FileText, Lock, Info, AlertCircle, Clock, UserCircle, MessageCircle,
+  Star, Home
 } from 'lucide-react';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase/firebase';
@@ -23,6 +24,20 @@ export default function Profile() {
     if (userData?.identityVerified) return 'Verified';
     return (localStorage.getItem('owambe_kyc_status') as any) || 'Not Verified';
   });
+
+  // Rating State
+  const [selectedRating, setSelectedRating] = useState<number>(userData?.rating || 0);
+  const [hoverRating, setHoverRating] = useState<number>(0);
+  const [isRatingLocked, setIsRatingLocked] = useState<boolean>(!!userData?.rating);
+  const [isSubmittingRating, setIsSubmittingRating] = useState<boolean>(false);
+
+  // Update rating state when userData changes
+  useEffect(() => {
+    if (userData?.rating) {
+      setSelectedRating(userData.rating);
+      setIsRatingLocked(true);
+    }
+  }, [userData]);
 
   // Update profilePic when userData changes
   useEffect(() => {
@@ -59,6 +74,38 @@ export default function Profile() {
         console.error("Error updating profile image:", error);
         showToast('Failed to update profile picture');
       }
+    }
+  };
+
+  const handleSubmitRating = async () => {
+    if (!currentUser || !selectedRating) return;
+
+    setIsSubmittingRating(true);
+    try {
+      const response = await fetch('/api/rate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: currentUser.uid,
+          rating: selectedRating,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setIsRatingLocked(true);
+        showToast('Thank you for your rating!');
+      } else {
+        showToast(data.error || 'Failed to submit rating');
+      }
+    } catch (error) {
+      console.error('Error submitting rating:', error);
+      showToast('Connection error. Please try again.');
+    } finally {
+      setIsSubmittingRating(false);
     }
   };
 
@@ -227,12 +274,51 @@ export default function Profile() {
             <ChevronRight size={18} className="text-text-muted" />
           </Link>
 
-          <div className="bg-surface p-4 rounded-3xl border border-border-base flex items-center justify-between group active:scale-[0.98] transition-all cursor-pointer">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-brand-primary rounded-lg flex items-center justify-center text-bg-primary font-bold text-[10px]">B</div>
-              <span className="text-text-primary font-bold">BINANCE <span className="text-brand-primary">Lite</span></span>
+          {/* Rating System (Replaces Binance Lite) */}
+          <div className="bg-surface p-6 rounded-3xl border border-border-base shadow-sm">
+            <div className="flex flex-col items-center gap-4">
+              <h3 className="text-sm font-bold text-text-primary">Rate Your Experience</h3>
+              <div className="flex items-center gap-2">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    disabled={isRatingLocked}
+                    onMouseEnter={() => !isRatingLocked && setHoverRating(star)}
+                    onMouseLeave={() => !isRatingLocked && setHoverRating(0)}
+                    onClick={() => !isRatingLocked && setSelectedRating(star)}
+                    className={`transition-all transform ${!isRatingLocked && 'hover:scale-110 active:scale-95'}`}
+                  >
+                    <motion.div
+                      animate={{
+                        scale: (hoverRating || selectedRating) >= star ? 1.2 : 1,
+                        color: (hoverRating || selectedRating) >= star ? '#22c55e' : '#9ca3af'
+                      }}
+                    >
+                      <Star size={32} fill={(hoverRating || selectedRating) >= star ? '#22c55e' : 'transparent'} />
+                    </motion.div>
+                  </button>
+                ))}
+              </div>
+              
+              {!isRatingLocked ? (
+                <button
+                  onClick={handleSubmitRating}
+                  disabled={!selectedRating || isSubmittingRating}
+                  className={`w-full py-3 rounded-xl font-bold text-sm transition-all ${
+                    selectedRating && !isSubmittingRating
+                      ? 'bg-brand-primary text-bg-primary shadow-lg shadow-brand-primary/20'
+                      : 'bg-bg-secondary text-text-muted cursor-not-allowed'
+                  }`}
+                >
+                  {isSubmittingRating ? 'Submitting...' : 'Submit Rating'}
+                </button>
+              ) : (
+                <div className="flex items-center gap-2 text-success font-medium text-sm bg-success/10 px-4 py-2 rounded-full">
+                  <CheckCircle2 size={16} />
+                  Rating Submitted
+                </div>
+              )}
             </div>
-            <ChevronRight size={18} className="text-text-muted" />
           </div>
         </div>
       </div>
@@ -243,12 +329,11 @@ export default function Profile() {
           <UserCircle size={24} />
           <span className="text-[10px] font-medium">Me</span>
         </button>
-        <button onClick={() => navigate('/ai-insights')} className="flex flex-col items-center gap-1 text-text-secondary hover:text-brand-primary transition-colors">
+        <button onClick={() => navigate('/')} className="flex flex-col items-center gap-1 text-text-secondary hover:text-brand-primary transition-colors">
           <div className="relative">
-            <MessageCircle size={24} />
-            <span className="absolute -top-1 -right-1 w-4 h-4 bg-warning text-bg-primary text-[7px] font-bold rounded-full flex items-center justify-center border border-surface">2</span>
+            <Home size={24} />
           </div>
-          <span className="text-[10px] font-medium">Chat</span>
+          <span className="text-[10px] font-medium">Home</span>
         </button>
       </div>
 

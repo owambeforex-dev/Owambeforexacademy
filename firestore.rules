@@ -7,7 +7,7 @@ service cloud.firestore {
     // ===============================================================
     //
     // Collection: users
-    // Fields: uid, email, firstName, lastName, role, balance, totalProfit, totalWithdrawal, totalDeposit, referralCode, referredBy, createdAt
+    // Fields: uid, email, firstName, lastName, role, balance, totalProfit, totalWithdrawal, totalDeposit, referralCode, referredBy, createdAt, rating, ratedAt
     //
     // Collection: investments
     // Fields: userId, planName, amount, status, startDate, endDate
