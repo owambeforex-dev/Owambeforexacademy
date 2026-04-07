@@ -1,5 +1,7 @@
 {
-  "name": "Owambe Forex Academy new site 2.2.1 Latest",
+  "name": "Owambe Forex Academy new site 2.3.0 Latest",
   "description": "A premium vintage financial trading education platform featuring mentorship, signals, account management, and demo trading.",
-  "requestFramePermissions": ["camera"]
+  "requestFramePermissions": [
+    "camera"
+  ]
 }

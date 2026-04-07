@@ -33,9 +33,9 @@ export default function Mentorship() {
       </div>
 
       <div className="container mx-auto px-4 relative z-10 max-w-6xl">
-        <div className="text-left mb-10">
-          <h1 className="text-2xl md:text-4xl font-heading font-extrabold text-text-primary mb-4">Learn and Earn <span className="text-brand-primary">with Us</span></h1>
-          <p className="text-xs md:text-base text-text-secondary max-w-xl leading-relaxed">
+        <div className="text-center mb-6">
+          <h1 className="text-2xl md:text-4xl font-heading font-extrabold text-text-primary mb-1">Learn and Earn <span className="text-brand-primary">with Us</span></h1>
+          <p className="text-[10px] md:text-base text-text-secondary max-w-none leading-relaxed whitespace-nowrap tracking-tight">
             Your journey to becoming a successful, profitable trader begins here.
           </p>
         </div>
@@ -44,10 +44,10 @@ export default function Mentorship() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="max-w-xl mr-auto mb-10 glass-dark rounded-xl p-4 md:p-6 border border-brand-primary/50 text-left relative overflow-hidden"
+          className="max-w-fit mx-auto mb-6 glass-dark rounded-xl py-2 px-4 md:py-3 md:px-6 border border-brand-primary/50 text-center relative overflow-hidden"
         >
           <div className="absolute inset-0 bg-gradient-to-r from-brand-primary/0 via-brand-primary/5 to-brand-primary/0 animate-pulse"></div>
-          <h2 className="text-sm md:text-xl font-serif font-bold text-text-primary relative z-10">
+          <h2 className="text-xs md:text-xl font-serif font-bold text-text-primary relative z-10 whitespace-nowrap">
             Choose from our amazing mentorship plan
           </h2>
         </motion.div>
