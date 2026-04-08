@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import ReCAPTCHA from 'react-google-recaptcha';
 import { 
   parsePhoneNumberFromString, 
   getCountries, 
@@ -69,8 +68,6 @@ export default function Auth() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
-  const recaptchaRef = useRef<ReCAPTCHA>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const from = (location.state as any)?.from?.pathname || "/overview";
@@ -171,7 +168,6 @@ export default function Auth() {
 
       if (!validatePassword(password)) return setError("Password must be 8+ chars with uppercase, lowercase, number, and special character");
       if (password !== confirmPassword) return setError("Passwords do not match");
-      if (!captchaToken) return setError("Please complete the CAPTCHA");
     }
 
     setIsSubmitting(true);
@@ -227,8 +223,6 @@ export default function Auth() {
         message = "Database permission error. Please contact support.";
       }
       setError(message);
-      recaptchaRef.current?.reset();
-      setCaptchaToken(null);
     } finally {
       setIsSubmitting(false);
     }
@@ -581,19 +575,6 @@ export default function Auth() {
                                 onChange={(e) => setConfirmPassword(e.target.value)}
                                 placeholder="••••••••"
                                 className="w-full bg-white border border-black/20 rounded-xl py-3 pl-11 pr-4 text-sm text-black placeholder:text-gray-400 focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/10 outline-none transition-all"
-                              />
-                            </div>
-                          </div>
-                        )}
-
-                        {mode === 'signup' && (
-                          <div className="flex justify-center py-2">
-                            <div className="scale-[0.85] origin-center">
-                              <ReCAPTCHA
-                                ref={recaptchaRef}
-                                sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY || "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"}
-                                onChange={(token) => setCaptchaToken(token)}
-                                theme="light"
                               />
                             </div>
                           </div>
