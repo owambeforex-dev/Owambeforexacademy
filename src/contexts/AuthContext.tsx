@@ -49,6 +49,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       if (user) {
+        setLoading(true); // Ensure loading is true when we have a user but no data yet
         // Subscribe to user data in Firestore
         const userDocRef = doc(db, 'users', user.uid);
         unsubscribeData = onSnapshot(userDocRef, (docSnap) => {

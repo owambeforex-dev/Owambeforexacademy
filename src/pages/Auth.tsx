@@ -73,6 +73,9 @@ export default function Auth() {
   const from = (location.state as any)?.from?.pathname || "/overview";
   const needsVerification = (location.state as any)?.needsVerification || false;
 
+  // Global loading state to prevent being stuck on login page while fetching role
+  const isAuthLoading = loading || isSubmitting;
+
   useEffect(() => {
     if (currentUser && !loading && userData) {
       if (currentUser.isAnonymous) {
@@ -127,10 +130,11 @@ export default function Auth() {
     );
   }, [countries, countrySearch]);
 
-  if (loading) {
+  if (isAuthLoading && !error) {
     return (
-      <div className="min-h-screen bg-bg-primary flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-brand-primary border-t-transparent rounded-full animate-spin"></div>
+      <div className="min-h-screen bg-white flex flex-col items-center justify-center">
+        <div className="w-16 h-16 border-4 border-brand-primary border-t-transparent rounded-full animate-spin mb-4"></div>
+        <p className="text-gray-900 font-black animate-pulse">Authenticating...</p>
       </div>
     );
   }
