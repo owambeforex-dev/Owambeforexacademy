@@ -80,19 +80,25 @@ export default function Auth() {
 
   useEffect(() => {
     if (currentUser && !loading && userData) {
+      console.log("[Auth Page] User authenticated and data loaded. Role:", userData.role);
+      
       if (currentUser.isAnonymous) {
+        console.log("[Auth Page] Anonymous user, signing out");
         signOut(auth);
         return;
       }
 
       if (!currentUser.emailVerified && currentUser.email !== ADMIN_EMAIL) {
+        console.log("[Auth Page] Email not verified, staying on auth page");
         // Stay on auth page to show verification message
         return;
       }
 
       if (userData.role === 'super_admin') {
+        console.log("[Auth Page] Admin detected, redirecting to /admin-dashboard");
         navigate('/admin-dashboard', { replace: true });
       } else {
+        console.log("[Auth Page] Regular user detected, redirecting to:", from);
         navigate(from, { replace: true });
       }
     }

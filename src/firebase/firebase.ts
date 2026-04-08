@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, FacebookAuthProvider } from 'firebase/auth';
+import { getAuth, GoogleAuthProvider, FacebookAuthProvider, setPersistence, browserLocalPersistence } from 'firebase/auth';
 import { getFirestore, doc, getDocFromServer } from 'firebase/firestore';
 import { getFunctions } from 'firebase/functions';
 import firebaseAppletConfig from '../../firebase-applet-config.json';
@@ -24,6 +24,12 @@ let functions: any;
 try {
   app = initializeApp(firebaseConfig);
   auth = getAuth(app);
+  
+  // Set persistence to local
+  setPersistence(auth, browserLocalPersistence).catch((err) => {
+    console.error("Auth persistence error:", err);
+  });
+
   googleProvider = new GoogleAuthProvider();
   facebookProvider = new FacebookAuthProvider();
   db = getFirestore(app, firebaseConfig.databaseId);

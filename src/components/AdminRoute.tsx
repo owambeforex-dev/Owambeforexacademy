@@ -13,6 +13,7 @@ const AdminRoute: React.FC<AdminRouteProps> = ({ children, requiredRole }) => {
   const location = useLocation();
 
   if (loading) {
+    console.log("[AdminRoute] Auth is loading, showing spinner...");
     return (
       <div className="min-h-screen bg-bg-primary flex items-center justify-center">
         <div className="w-12 h-12 border-4 border-brand-primary border-t-transparent rounded-full animate-spin"></div>
@@ -23,10 +24,17 @@ const AdminRoute: React.FC<AdminRouteProps> = ({ children, requiredRole }) => {
   const userRole = userData?.role;
   const isSuperAdmin = userRole === 'super_admin';
 
-  if (!currentUser || !isSuperAdmin) {
+  if (!currentUser) {
+    console.log("[AdminRoute] No user authenticated, redirecting to /auth");
     return <Navigate to="/auth" replace />;
   }
 
+  if (!isSuperAdmin) {
+    console.log("[AdminRoute] User is not super_admin, access denied. Role:", userRole);
+    return <AccessDenied />;
+  }
+
+  console.log("[AdminRoute] Super Admin access granted to:", location.pathname);
   return <>{children}</>;
 };
 
