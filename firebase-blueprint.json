@@ -7,9 +7,11 @@
       "properties": {
         "uid": { "type": "string" },
         "email": { "type": "string", "format": "email" },
+        "name": { "type": "string" },
         "firstName": { "type": "string" },
         "lastName": { "type": "string" },
-        "role": { "type": "string", "enum": ["user", "admin"] },
+        "phone": { "type": "string" },
+        "role": { "type": "string", "enum": ["user", "admin", "super_admin", "finance_admin", "support_admin"] },
         "availableBalance": { "type": "number" },
         "transferPin": { "type": "string" },
         "totalProfit": { "type": "number" },
@@ -17,6 +19,8 @@
         "totalDeposit": { "type": "number" },
         "referralCode": { "type": "string" },
         "referredBy": { "type": "string" },
+        "isBanned": { "type": "boolean" },
+        "isFrozen": { "type": "boolean" },
         "services": {
           "type": "object",
           "properties": {
@@ -27,91 +31,119 @@
             "accountManagement": { "type": ["object", "null"] }
           }
         },
-        "createdAt": { "type": "string", "format": "date-time" }
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
       },
       "required": ["uid", "email", "role"]
     },
-    "Investment": {
-      "title": "Investment",
-      "description": "User investment records",
+    "Wallet": {
+      "title": "Wallet",
+      "description": "User financial wallet information",
+      "type": "object",
+      "properties": {
+        "balance": { "type": "number" },
+        "totalDeposit": { "type": "number" },
+        "totalWithdraw": { "type": "number" },
+        "totalProfit": { "type": "number" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["balance", "totalDeposit", "totalWithdraw", "totalProfit"]
+    },
+    "Transaction": {
+      "title": "Transaction",
+      "description": "Unified transaction ledger (Deposits, Withdrawals, Transfers, Profits)",
       "type": "object",
       "properties": {
         "userId": { "type": "string" },
+        "type": { "type": "string", "enum": ["deposit", "withdrawal", "transfer_in", "transfer_out", "profit", "referral_bonus"] },
+        "amount": { "type": "number" },
+        "status": { "type": "string", "enum": ["pending", "processing", "completed", "rejected"] },
+        "method": { "type": "string" },
+        "details": { "type": "object" },
+        "proofUrl": { "type": "string" },
+        "targetUserId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "type", "amount", "status", "createdAt"]
+    },
+    "ServiceSubscription": {
+      "title": "ServiceSubscription",
+      "description": "User subscriptions for various services",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "serviceType": { "type": "string", "enum": ["mentorship", "signals", "investment", "account_management", "evaluation"] },
+        "planId": { "type": "string" },
         "planName": { "type": "string" },
         "amount": { "type": "number" },
-        "status": { "type": "string", "enum": ["active", "completed"] },
+        "status": { "type": "string", "enum": ["pending", "active", "rejected", "expired", "completed"] },
         "startDate": { "type": "string", "format": "date-time" },
-        "endDate": { "type": "string", "format": "date-time" }
-      },
-      "required": ["userId", "planName", "amount", "status"]
-    },
-    "Deposit": {
-      "title": "Deposit",
-      "description": "User deposit requests",
-      "type": "object",
-      "properties": {
-        "userId": { "type": "string" },
-        "amount": { "type": "number" },
-        "method": { "type": "string" },
-        "status": { "type": "string", "enum": ["pending", "approved", "rejected"] },
-        "proofUrl": { "type": "string" },
+        "endDate": { "type": "string", "format": "date-time" },
+        "details": { "type": "object" },
         "createdAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["userId", "amount", "status"]
+      "required": ["userId", "serviceType", "status", "createdAt"]
     },
-    "Withdrawal": {
-      "title": "Withdrawal",
-      "description": "User withdrawal requests",
+    "AdminLog": {
+      "title": "AdminLog",
+      "description": "Audit logs for admin actions",
       "type": "object",
       "properties": {
-        "userId": { "type": "string" },
-        "amount": { "type": "number" },
-        "method": { "type": "string" },
-        "status": { "type": "string", "enum": ["pending", "approved", "rejected"] },
-        "address": { "type": "string" },
-        "createdAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["userId", "amount", "status"]
-    },
-    "AccountManagementApplication": {
-      "title": "AccountManagementApplication",
-      "description": "Applications for account management services",
-      "type": "object",
-      "properties": {
-        "userId": { "type": "string" },
-        "fullName": { "type": "string" },
-        "email": { "type": "string", "format": "email" },
-        "phone": { "type": "string" },
-        "accountType": { "type": "string" },
-        "status": { "type": "string", "enum": ["pending", "approved", "rejected"] },
-        "createdAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["userId", "email", "status"]
-    },
-    "ActivityLog": {
-      "title": "ActivityLog",
-      "description": "Logs of user activity",
-      "type": "object",
-      "properties": {
-        "userId": { "type": "string" },
+        "adminId": { "type": "string" },
+        "adminEmail": { "type": "string" },
         "action": { "type": "string" },
-        "details": { "type": "string" },
+        "targetUserId": { "type": "string" },
+        "details": { "type": "object" },
         "timestamp": { "type": "string", "format": "date-time" }
       },
-      "required": ["userId", "action", "timestamp"]
+      "required": ["adminId", "action", "timestamp"]
     },
-    "Challenge": {
-      "title": "Challenge",
-      "description": "Prop firm challenge records",
+    "Notification": {
+      "title": "Notification",
+      "description": "In-app notifications for users",
       "type": "object",
       "properties": {
         "userId": { "type": "string" },
-        "accountSize": { "type": "string" },
-        "platform": { "type": "string" },
-        "status": { "type": "string", "enum": ["pending", "active", "passed", "failed"] },
+        "title": { "type": "string" },
+        "message": { "type": "string" },
+        "type": { "type": "string", "enum": ["info", "success", "warning", "error"] },
+        "isRead": { "type": "boolean" },
         "createdAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["userId", "accountSize", "status"]
+      "required": ["userId", "title", "message", "isRead", "createdAt"]
+    },
+    "SystemSettings": {
+      "title": "SystemSettings",
+      "description": "Global system configurations and feature toggles",
+      "type": "object",
+      "properties": {
+        "roi": {
+          "type": "object",
+          "properties": {
+            "bronze": { "type": "number" },
+            "silver": { "type": "number" },
+            "gold": { "type": "number" }
+          }
+        },
+        "features": {
+          "type": "object",
+          "properties": {
+            "depositsEnabled": { "type": "boolean" },
+            "withdrawalsEnabled": { "type": "boolean" },
+            "transfersEnabled": { "type": "boolean" },
+            "mentorshipEnabled": { "type": "boolean" },
+            "signalsEnabled": { "type": "boolean" },
+            "investmentEnabled": { "type": "boolean" },
+            "accountManagementEnabled": { "type": "boolean" },
+            "evaluationEnabled": { "type": "boolean" }
+          }
+        },
+        "prices": { "type": "object" },
+        "durations": { "type": "object" },
+        "updatedBy": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      }
     }
   },
   "firestore": {
@@ -119,29 +151,29 @@
       "schema": "User",
       "description": "User profile documents"
     },
-    "/investments/{investmentId}": {
-      "schema": "Investment",
-      "description": "Investment records"
+    "/wallets/{userId}": {
+      "schema": "Wallet",
+      "description": "User financial wallet documents"
     },
-    "/deposits/{depositId}": {
-      "schema": "Deposit",
-      "description": "Deposit requests"
+    "/transactions/{transactionId}": {
+      "schema": "Transaction",
+      "description": "Unified transaction ledger"
     },
-    "/withdrawals/{withdrawalId}": {
-      "schema": "Withdrawal",
-      "description": "Withdrawal requests"
+    "/subscriptions/{subscriptionId}": {
+      "schema": "ServiceSubscription",
+      "description": "User service subscriptions"
     },
-    "/accountManagementApplications/{appId}": {
-      "schema": "AccountManagementApplication",
-      "description": "Account management applications"
+    "/adminLogs/{logId}": {
+      "schema": "AdminLog",
+      "description": "Admin activity logs"
     },
-    "/activityLogs/{logId}": {
-      "schema": "ActivityLog",
-      "description": "User activity logs"
+    "/notifications/{notificationId}": {
+      "schema": "Notification",
+      "description": "User notifications"
     },
-    "/challenges/{challengeId}": {
-      "schema": "Challenge",
-      "description": "Prop firm challenge records"
+    "/settings/global": {
+      "schema": "SystemSettings",
+      "description": "Global system settings"
     }
   }
 }

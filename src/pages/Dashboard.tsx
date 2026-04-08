@@ -5,7 +5,8 @@ import { AnimatePresence } from 'motion/react';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import { db } from '../firebase/firebase';
-import { collection, query, where, getDocs, doc, getDoc, orderBy, setDoc, onSnapshot } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, getDoc, orderBy, setDoc, onSnapshot, limit } from 'firebase/firestore';
+import { handleFirestoreError, OperationType } from '../lib/firestoreUtils';
 import { Link, Navigate } from 'react-router-dom';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart as RechartsPieChart, Pie, Cell, Legend } from 'recharts';
 import StickyHeader from '../components/StickyHeader';
@@ -53,6 +54,35 @@ export default function Dashboard({ isEmbedded = false }: { isEmbedded?: boolean
     }, 5000);
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    if (!currentUser) return;
+
+    const unsubWallet = onSnapshot(doc(db, 'wallets', currentUser.uid), (snap) => {
+      if (snap.exists()) setWallet(snap.data());
+    }, (err) => handleFirestoreError(err, OperationType.GET, `wallets/${currentUser.uid}`));
+
+    const unsubInvestments = onSnapshot(query(collection(db, 'investments'), where('userId', '==', currentUser.uid), orderBy('createdAt', 'desc')), (snap) => {
+      setInvestments(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    }, (err) => handleFirestoreError(err, OperationType.GET, 'investments'));
+
+    const unsubTransactions = onSnapshot(query(collection(db, 'transactions'), where('userId', '==', currentUser.uid), orderBy('createdAt', 'desc'), limit(20)), (snap) => {
+      setTransactions(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Transaction)));
+    }, (err) => handleFirestoreError(err, OperationType.GET, 'transactions'));
+
+    const unsubReferrals = onSnapshot(query(collection(db, 'users'), where('referredBy', '==', userData?.myReferralCode || '')), (snap) => {
+      if (userData?.myReferralCode) {
+        setReferrals(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      }
+    }, (err) => handleFirestoreError(err, OperationType.GET, 'users'));
+
+    return () => {
+      unsubWallet();
+      unsubInvestments();
+      unsubTransactions();
+      unsubReferrals();
+    };
+  }, [currentUser, userData]);
 
   useEffect(() => {
     console.log('Dashboard in open access mode');

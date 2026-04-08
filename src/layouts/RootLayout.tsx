@@ -8,7 +8,7 @@ import AnimatedBackground from '../components/AnimatedBackground';
 
 export default function RootLayout() {
   const location = useLocation();
-  const isAuthPage = location.pathname === '/login' || location.pathname === '/signup';
+  const isAuthPage = location.pathname === '/auth';
   const isProfilePage = location.pathname === '/profile' || location.pathname === '/settings';
   const isPaymentPage = location.pathname === '/payment';
   const hideLayout = isAuthPage || isProfilePage;

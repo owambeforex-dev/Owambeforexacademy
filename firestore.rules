@@ -7,28 +7,25 @@ service cloud.firestore {
     // ===============================================================
     //
     // Collection: users
-    // Fields: uid, email, firstName, lastName, role, availableBalance, transferPin, totalProfit, totalWithdrawal, totalDeposit, referralCode, referredBy, services, createdAt
+    // Fields: uid, email, name, firstName, lastName, phone, role, availableBalance, totalProfit, totalDeposit, totalWithdrawal, isBanned, isFrozen, createdAt, updatedAt
     //
-    // Collection: investments
-    // Fields: userId, planName, amount, status, startDate, endDate
-    //
-    // Collection: deposits
-    // Fields: userId, amount, method, status, proofUrl, createdAt
-    //
-    // Collection: withdrawals
-    // Fields: userId, amount, method, status, address, createdAt
+    // Collection: wallets
+    // Fields: balance, totalDeposit, totalWithdraw, totalProfit, updatedAt
     //
     // Collection: transactions
-    // Fields: userId, type, subType, amount, recipientId, recipientEmail, senderId, senderEmail, status, createdAt
+    // Fields: userId, type, amount, status, method, details, proofUrl, targetUserId, createdAt, updatedAt
     //
-    // Collection: accountManagementApplications
-    // Fields: userId, fullName, email, phone, accountType, status, createdAt
+    // Collection: subscriptions
+    // Fields: userId, serviceType, planId, planName, amount, status, startDate, endDate, details, createdAt
     //
-    // Collection: activityLogs
-    // Fields: userId, action, details, timestamp
+    // Collection: adminLogs
+    // Fields: adminId, adminEmail, action, targetUserId, details, timestamp
     //
-    // Collection: challenges
-    // Fields: userId, accountSize, platform, status, createdAt
+    // Collection: notifications
+    // Fields: userId, title, message, type, isRead, createdAt
+    //
+    // Collection: settings/global
+    // Fields: roi, features, prices, updatedBy, updatedAt
     //
     // ===============================================================
 
@@ -44,14 +41,29 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
-    function isDocOwner() {
-      return isAuthenticated() && request.auth.uid == resource.data.userId;
+    function getUserData(uid) {
+      return get(/databases/$(database)/documents/users/$(uid)).data;
+    }
+
+    function isSuperAdmin() {
+      return isAuthenticated() && 
+        (getUserData(request.auth.uid).role == 'super_admin' || 
+         (request.auth.token.email == "info.realcipher@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    function isFinanceAdmin() {
+      let role = getUserData(request.auth.uid).role;
+      return isAuthenticated() && (role == 'finance_admin' || isSuperAdmin());
+    }
+
+    function isSupportAdmin() {
+      let role = getUserData(request.auth.uid).role;
+      return isAuthenticated() && (role == 'support_admin' || isSuperAdmin() || isFinanceAdmin());
     }
 
     function isAdmin() {
-      return isAuthenticated() && 
-        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
-         (request.auth.token.email == "owambeforex@gmail.com" && request.auth.token.email_verified == true));
+      let role = getUserData(request.auth.uid).role;
+      return isAuthenticated() && (role in ['admin', 'super_admin', 'finance_admin', 'support_admin'] || isSuperAdmin());
     }
 
     function hasRequiredFields(fields) {
@@ -66,44 +78,45 @@ service cloud.firestore {
       return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
     }
 
+    function isValidTimestamp(ts) {
+      return ts is string && ts.matches("^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}.*Z$");
+    }
+
+    function isRecent(ts) {
+      return true; // Simplified for string timestamps, ideally use server timestamp
+    }
+
     // ===============================================================
     // Domain Validators
     // ===============================================================
 
     function isValidUser(data) {
       return hasRequiredFields(['uid', 'email', 'role']) &&
-             data.uid is string &&
-             data.email is string && isValidEmail(data.email) &&
-             data.role in ['user', 'admin'] &&
-             (data.role == 'user' || isAdmin());
+             data.uid == request.auth.uid &&
+             isValidEmail(data.email) &&
+             data.role in ['user', 'admin', 'super_admin', 'finance_admin', 'support_admin'] &&
+             (!('name' in data) || (data.name is string && data.name.size() < 100)) &&
+             (!('phone' in data) || (data.phone is string && data.phone.size() < 20)) &&
+             (!('availableBalance' in data) || data.availableBalance is number) &&
+             (!('isBanned' in data) || data.isBanned is bool) &&
+             (!('isFrozen' in data) || data.isFrozen is bool);
     }
 
-    function isValidInvestment(data) {
-      return hasRequiredFields(['userId', 'planName', 'amount', 'status']) &&
-             data.userId is string &&
-             data.amount is number && data.amount > 0 &&
-             data.status in ['active', 'completed'];
+    function isValidWallet(data) {
+      return hasRequiredFields(['balance', 'totalDeposit', 'totalWithdraw', 'totalProfit']) &&
+             data.balance is number &&
+             data.totalDeposit is number &&
+             data.totalWithdraw is number &&
+             data.totalProfit is number;
     }
 
-    function isValidDeposit(data) {
-      return hasRequiredFields(['userId', 'amount', 'status']) &&
+    function isValidTransaction(data) {
+      return hasRequiredFields(['userId', 'type', 'amount', 'status', 'createdAt']) &&
              data.userId is string &&
-             data.amount is number && data.amount > 0 &&
-             data.status in ['pending', 'approved', 'rejected'];
-    }
-
-    function isValidWithdrawal(data) {
-      return hasRequiredFields(['userId', 'amount', 'status']) &&
-             data.userId is string &&
-             data.amount is number && data.amount > 0 &&
-             data.status in ['pending', 'approved', 'rejected'];
-    }
-
-    function isValidApplication(data) {
-      return hasRequiredFields(['userId', 'email', 'status']) &&
-             data.userId is string &&
-             data.email is string && isValidEmail(data.email) &&
-             data.status in ['pending', 'approved', 'rejected'];
+             data.type in ['deposit', 'withdrawal', 'transfer', 'profit', 'referral_bonus'] &&
+             data.amount is number && data.amount >= 0 &&
+             data.status in ['pending', 'processing', 'completed', 'rejected', 'success'] &&
+             isValidTimestamp(data.createdAt);
     }
 
     // ===============================================================
@@ -111,57 +124,66 @@ service cloud.firestore {
     // ===============================================================
 
     match /users/{userId} {
-      allow read: if isOwner(userId) || isAdmin();
-      allow create: if isAuthenticated() && request.auth.uid == userId && isValidUser(request.resource.data);
+      allow read: if isOwner(userId) || isSupportAdmin();
+      allow create: if isOwner(userId) && 
+                      isValidUser(request.resource.data) && 
+                      request.resource.data.role == 'user'; // Users can only create themselves as 'user'
       allow update: if (isOwner(userId) && 
-                       request.resource.data.role == resource.data.role &&
-                       (!('availableBalance' in resource.data) || request.resource.data.availableBalance == resource.data.availableBalance) &&
-                       (!('transferPin' in resource.data) || request.resource.data.transferPin == resource.data.transferPin) &&
-                       (!('services' in resource.data) || request.resource.data.services == resource.data.services)
-                      ) || isAdmin();
-      allow delete: if isAdmin();
+                        isValidUser(request.resource.data) &&
+                        request.resource.data.role == resource.data.role && // Cannot change own role
+                        request.resource.data.email == resource.data.email && // Cannot change email
+                        (!('availableBalance' in request.resource.data) || request.resource.data.availableBalance == resource.data.availableBalance) // Cannot change balance
+                       ) || isSuperAdmin();
+      allow delete: if isSuperAdmin();
+    }
+
+    match /wallets/{userId} {
+      allow read: if isOwner(userId) || isFinanceAdmin();
+      allow create: if isOwner(userId) && isValidWallet(request.resource.data);
+      allow update: if isSuperAdmin() || (isFinanceAdmin() && isValidWallet(request.resource.data));
+      allow delete: if isSuperAdmin();
     }
 
     match /transactions/{txId} {
-      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
-      allow create: if false;
-      allow update, delete: if isAdmin();
+      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isFinanceAdmin());
+      allow create: if isAuthenticated() && 
+                      request.resource.data.userId == request.auth.uid &&
+                      isValidTransaction(request.resource.data) &&
+                      request.resource.data.status == 'pending';
+      allow update: if isFinanceAdmin() || isSuperAdmin();
+      allow delete: if isSuperAdmin();
     }
 
-    match /investments/{investmentId} {
-      allow read: if isDocOwner() || isAdmin();
-      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid && isValidInvestment(request.resource.data);
-      allow update, delete: if isAdmin();
-    }
-
-    match /deposits/{depositId} {
-      allow read: if isDocOwner() || isAdmin();
-      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid && isValidDeposit(request.resource.data);
-      allow update, delete: if isAdmin();
-    }
-
-    match /withdrawals/{withdrawalId} {
-      allow read: if isDocOwner() || isAdmin();
-      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid && isValidWithdrawal(request.resource.data);
-      allow update, delete: if isAdmin();
-    }
-
-    match /accountManagementApplications/{appId} {
-      allow read: if isDocOwner() || isAdmin();
-      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid && isValidApplication(request.resource.data);
-      allow update, delete: if isAdmin();
-    }
-
-    match /activityLogs/{logId} {
-      allow read: if isAdmin();
+    match /subscriptions/{subId} {
+      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isSupportAdmin());
       allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isSuperAdmin();
     }
 
-    match /challenges/{challengeId} {
-      allow read: if isDocOwner() || isAdmin();
-      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if isAdmin();
+    match /adminLogs/{logId} {
+      allow read: if isSuperAdmin();
+      allow create: if isAdmin();
+      allow update, delete: if false;
     }
+
+    match /notifications/{notifId} {
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAdmin();
+      allow update: if isAuthenticated() && 
+                      resource.data.userId == request.auth.uid && 
+                      request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead']);
+      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+
+    match /settings/global {
+      allow read: if true;
+      allow write: if isSuperAdmin();
+    }
+
+    // Legacy collections
+    match /investments/{id} { allow read, write: if isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid); }
+    match /deposits/{id} { allow read, write: if isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid); }
+    match /withdrawals/{id} { allow read, write: if isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid); }
   }
 }

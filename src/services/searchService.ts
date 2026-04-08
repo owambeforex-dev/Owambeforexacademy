@@ -55,7 +55,7 @@ export async function searchInternal(query: string): Promise<SearchResult[]> {
 }
 
 export async function searchGemini(query: string): Promise<SearchResult | null> {
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
   if (!apiKey) return null;
 
   const ai = new GoogleGenAI({ apiKey });

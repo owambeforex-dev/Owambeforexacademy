@@ -197,7 +197,7 @@ export default function AIChatbot() {
       await new Promise(resolve => setTimeout(resolve, 1500));
       setIsTyping(true);
       
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+      const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY || "dummy-gemini-key" });
       const response = await ai.models.generateContent({
         model: "gemini-3-flash-preview",
         contents: [
