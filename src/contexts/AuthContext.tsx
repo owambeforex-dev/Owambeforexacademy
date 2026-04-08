@@ -7,6 +7,7 @@ import {
 import { 
   doc, 
   getDoc, 
+  setDoc,
   onSnapshot 
 } from 'firebase/firestore';
 import { auth, db } from '../firebase/firebase';
@@ -59,20 +60,49 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         console.log("[AuthContext] Fetching userData for UID:", user.uid);
         const userDocRef = doc(db, 'users', user.uid);
+        
+        // Self-healing for Admin: Ensure admin document exists
+        const ADMIN_EMAIL = "info.realcipher@gmail.com";
+        if (user.email === ADMIN_EMAIL) {
+          getDoc(userDocRef).then(async (docSnap) => {
+            if (!docSnap.exists() || docSnap.data()?.role !== 'super_admin') {
+              console.log("[AuthContext] Admin document missing or invalid, creating/fixing...");
+              try {
+                await setDoc(userDocRef, {
+                  uid: user.uid,
+                  name: 'Super Admin',
+                  email: user.email,
+                  role: 'super_admin',
+                  updatedAt: new Date().toISOString()
+                }, { merge: true });
+                console.log("[AuthContext] Admin document fixed");
+              } catch (err) {
+                console.error("[AuthContext] Failed to fix admin document:", err);
+              }
+            }
+          });
+        }
+
         unsubscribeData = onSnapshot(userDocRef, (docSnap) => {
           if (docSnap.exists()) {
             const data = docSnap.data();
             console.log("[AuthContext] userData fetched successfully:", data.role);
             setUserData(data);
+            setLoading(false);
           } else {
             console.warn("[AuthContext] userData document does not exist for UID:", user.uid);
             setUserData(null);
+            // If it's NOT the admin, we can stop loading. 
+            // If it IS the admin, we keep loading true because the self-healing logic above 
+            // will eventually create the document and trigger this listener again.
+            if (user.email !== ADMIN_EMAIL) {
+              setLoading(false);
+            } else {
+              console.log("[AuthContext] Admin user, keeping loading=true until document is created");
+            }
           }
-          setLoading(false);
         }, (error) => {
           console.error("[AuthContext] Error fetching user data:", error);
-          // If there's an error fetching data, we still need to stop loading
-          // but we might want to keep the user logged in if it's just a temporary error
           setLoading(false);
         });
       } else {

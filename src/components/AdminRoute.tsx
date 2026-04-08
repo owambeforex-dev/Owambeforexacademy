@@ -23,10 +23,22 @@ const AdminRoute: React.FC<AdminRouteProps> = ({ children, requiredRole }) => {
 
   const userRole = userData?.role;
   const isSuperAdmin = userRole === 'super_admin';
+  const ADMIN_EMAIL = "info.realcipher@gmail.com";
+  const isAdminEmail = currentUser?.email === ADMIN_EMAIL;
 
   if (!currentUser) {
     console.log("[AdminRoute] No user authenticated, redirecting to /auth");
     return <Navigate to="/auth" replace />;
+  }
+
+  // If it's the admin email but userData is still missing, keep loading
+  if (isAdminEmail && !userData) {
+    console.log("[AdminRoute] Admin user detected but userData is missing, waiting...");
+    return (
+      <div className="min-h-screen bg-bg-primary flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-brand-primary border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
   }
 
   if (!isSuperAdmin) {
