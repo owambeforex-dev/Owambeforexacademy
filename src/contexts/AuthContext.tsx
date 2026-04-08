@@ -78,13 +78,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 console.log("[AuthContext] Admin document fixed");
               } catch (err) {
                 console.error("[AuthContext] Failed to fix admin document:", err);
+                setLoading(false); // Stop loading on failure
               }
             }
+          }).catch(err => {
+            console.error("[AuthContext] Error in admin self-healing check:", err);
+            setLoading(false); // Stop loading on failure
           });
         }
 
+        // Safety timeout to prevent infinite loading
+        const timeoutId = setTimeout(() => {
+          setLoading(prev => {
+            if (prev) {
+              console.warn("[AuthContext] Loading timeout reached, forcing loading=false");
+              return false;
+            }
+            return prev;
+          });
+        }, 5000); // 5 seconds timeout
+
         unsubscribeData = onSnapshot(userDocRef, (docSnap) => {
           if (docSnap.exists()) {
+            clearTimeout(timeoutId);
             const data = docSnap.data();
             console.log("[AuthContext] userData fetched successfully:", data.role);
             setUserData(data);
@@ -92,16 +108,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           } else {
             console.warn("[AuthContext] userData document does not exist for UID:", user.uid);
             setUserData(null);
-            // If it's NOT the admin, we can stop loading. 
-            // If it IS the admin, we keep loading true because the self-healing logic above 
-            // will eventually create the document and trigger this listener again.
             if (user.email !== ADMIN_EMAIL) {
+              clearTimeout(timeoutId);
               setLoading(false);
-            } else {
-              console.log("[AuthContext] Admin user, keeping loading=true until document is created");
             }
           }
         }, (error) => {
+          clearTimeout(timeoutId);
           console.error("[AuthContext] Error fetching user data:", error);
           setLoading(false);
         });

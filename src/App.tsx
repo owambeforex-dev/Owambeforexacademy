@@ -49,6 +49,8 @@ import AccountManagementActivities from './pages/activities/AccountManagementAct
 import { NotificationProvider } from './contexts/NotificationContext';
 import { ToastProvider } from './contexts/ToastContext';
 
+import AdminLayout from './layouts/AdminLayout';
+
 export default function App() {
   return (
     <ErrorBoundary>
@@ -59,6 +61,15 @@ export default function App() {
           <Routes>
             <Route path="/auth" element={<Auth />} />
             
+            {/* Admin Routes - Isolated from Main Layout */}
+            <Route path="/admin-dashboard" element={
+              <AdminRoute>
+                <AdminLayout />
+              </AdminRoute>
+            }>
+              <Route index element={<AdminDashboard />} />
+            </Route>
+
             <Route path="/" element={
               <ProtectedRoute>
                 <RootLayout />
@@ -80,13 +91,6 @@ export default function App() {
               <Route path="withdraw" element={<Withdraw />} />
               <Route path="transfer" element={<Transfer />} />
               <Route path="set-transfer-pin" element={<SetTransferPin />} />
-              
-              {/* Admin Panel (Hidden) */}
-              <Route path="admin-dashboard" element={
-                <AdminRoute>
-                  <AdminDashboard />
-                </AdminRoute>
-              } />
               
               {/* New Service Pages */}
               <Route path="services" element={<AllServices />} />

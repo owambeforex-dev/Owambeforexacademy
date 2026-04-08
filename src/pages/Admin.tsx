@@ -143,92 +143,60 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="pt-24 pb-12 min-h-screen bg-bg-primary">
-      <div className="container mx-auto px-4 max-w-7xl">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
-          <div>
-            <h1 className="text-3xl font-heading font-extrabold text-text-primary flex items-center gap-3">
-              <Shield className="text-brand-primary" size={32} />
-              Admin <span className="text-brand-primary">Panel</span>
-            </h1>
-            <p className="text-text-secondary text-sm mt-1">Enterprise-grade system management & oversight.</p>
-          </div>
-          
-          <div className="flex items-center gap-3">
-            <div className="relative group">
-              <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-brand-primary transition-colors" />
-              <input 
-                type="text" 
-                placeholder="Search users, tx, logs..." 
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="bg-surface border border-border-base rounded-2xl pl-12 pr-4 py-3 text-sm text-text-primary focus:outline-none focus:border-brand-primary w-full md:w-80 transition-all shadow-sm"
-              />
-            </div>
-            <button 
-              onClick={() => setIsRefreshing(true)}
-              className="p-3 bg-surface border border-border-base rounded-2xl text-text-muted hover:text-brand-primary hover:border-brand-primary transition-all shadow-sm"
-            >
-              <RefreshCcw size={20} className={isRefreshing ? 'animate-spin' : ''} />
-            </button>
-          </div>
-        </div>
-
-        {/* Navigation Tabs */}
-        <div className="flex overflow-x-auto hide-scrollbar gap-2 mb-10 bg-surface p-1.5 rounded-2xl border border-border-base shadow-sm">
-          {ADMIN_TABS.map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold whitespace-nowrap transition-all ${
-                activeTab === tab.id 
-                  ? 'bg-brand-primary text-bg-primary shadow-lg shadow-brand-primary/20' 
-                  : 'text-text-muted hover:bg-bg-secondary hover:text-text-primary'
-              }`}
-            >
-              <tab.icon size={18} />
-              {tab.label}
-              {tab.id === 'transactions' && stats.pendingTransactions > 0 && (
-                <span className="bg-error text-white text-[10px] px-1.5 py-0.5 rounded-full animate-pulse">
-                  {stats.pendingTransactions}
-                </span>
-              )}
-            </button>
-          ))}
-        </div>
-
-        {/* Content Area */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeTab}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.2 }}
+    <div className="space-y-8">
+      {/* Navigation Tabs - Compact for the new layout */}
+      <div className="flex overflow-x-auto hide-scrollbar gap-2 mb-8 bg-surface p-1.5 rounded-2xl border border-border-base shadow-sm">
+        {ADMIN_TABS.map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold whitespace-nowrap transition-all ${
+              activeTab === tab.id 
+                ? 'bg-brand-primary text-bg-primary shadow-lg shadow-brand-primary/20' 
+                : 'text-text-muted hover:bg-bg-secondary hover:text-text-primary'
+            }`}
           >
-            {activeTab === 'dashboard' && (
-              <div className="space-y-8">
-                {/* Stats Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                  {[
-                    { label: 'Total Users', value: stats.totalUsers, icon: Users, color: 'brand' },
-                    { label: 'Total Deposits', value: `$${stats.totalDeposits.toLocaleString()}`, icon: Upload, color: 'success' },
-                    { label: 'Total Withdrawals', value: `$${stats.totalWithdrawals.toLocaleString()}`, icon: Download, color: 'error' },
-                    { label: 'Active Services', value: stats.activeServices, icon: Zap, color: 'warning' },
-                  ].map((item, i) => (
-                    <div key={i} className="bg-surface rounded-3xl p-6 border border-border-base shadow-sm hover:shadow-md transition-all group">
-                      <div className="flex items-center justify-between mb-4">
-                        <div className={`w-12 h-12 rounded-2xl bg-${item.color}-primary/10 flex items-center justify-center text-${item.color}-primary group-hover:scale-110 transition-transform`}>
-                          <item.icon size={24} />
-                        </div>
-                        <BarChart3 size={20} className="text-text-muted opacity-20" />
+            <tab.icon size={18} />
+            {tab.label}
+            {tab.id === 'transactions' && stats.pendingTransactions > 0 && (
+              <span className="bg-error text-white text-[10px] px-1.5 py-0.5 rounded-full animate-pulse">
+                {stats.pendingTransactions}
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
+
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={activeTab}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.2 }}
+        >
+          {activeTab === 'dashboard' && (
+            <div className="space-y-8">
+              {/* Stats Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {[
+                  { label: 'Total Users', value: stats.totalUsers, icon: Users, color: 'brand' },
+                  { label: 'Total Deposits', value: `$${stats.totalDeposits.toLocaleString()}`, icon: Upload, color: 'success' },
+                  { label: 'Total Withdrawals', value: `$${stats.totalWithdrawals.toLocaleString()}`, icon: Download, color: 'error' },
+                  { label: 'Active Services', value: stats.activeServices, icon: Zap, color: 'warning' },
+                ].map((item, i) => (
+                  <div key={i} className="bg-surface rounded-3xl p-6 border border-border-base shadow-sm hover:shadow-md transition-all group">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className={`w-12 h-12 rounded-2xl bg-${item.color}-primary/10 flex items-center justify-center text-${item.color}-primary group-hover:scale-110 transition-transform`}>
+                        <item.icon size={24} />
                       </div>
-                      <div className="text-3xl font-mono font-bold text-text-primary mb-1">{item.value}</div>
-                      <div className="text-xs text-text-muted uppercase tracking-widest font-bold">{item.label}</div>
+                      <BarChart3 size={20} className="text-text-muted opacity-20" />
                     </div>
-                  ))}
-                </div>
+                    <div className="text-3xl font-mono font-bold text-text-primary mb-1">{item.value}</div>
+                    <div className="text-xs text-text-muted uppercase tracking-widest font-bold">{item.label}</div>
+                  </div>
+                ))}
+              </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                   {/* Recent Activity */}
@@ -742,9 +710,8 @@ export default function AdminDashboard() {
                 </div>
               </div>
             )}
-          </motion.div>
-        </AnimatePresence>
-      </div>
+        </motion.div>
+      </AnimatePresence>
     </div>
   );
 }
