@@ -52,6 +52,8 @@ const getFlagEmoji = (countryCode: string) => {
 
 type AuthMode = 'login' | 'signup';
 
+const ADMIN_EMAIL = "info.realcipher@gmail.com";
+
 export default function Auth() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -83,7 +85,7 @@ export default function Auth() {
         return;
       }
 
-      if (!currentUser.emailVerified) {
+      if (!currentUser.emailVerified && currentUser.email !== ADMIN_EMAIL) {
         // Stay on auth page to show verification message
         return;
       }
@@ -139,7 +141,7 @@ export default function Auth() {
     );
   }
 
-  if (currentUser && currentUser.emailVerified && userData) {
+  if (currentUser && (currentUser.emailVerified || currentUser.email === ADMIN_EMAIL) && userData) {
     if (userData.role === 'super_admin') {
       return <Navigate to="/admin-dashboard" replace />;
     }
@@ -193,7 +195,7 @@ export default function Auth() {
             name: name,
             email: user.email,
             phone: fullPhone,
-            role: 'user',
+            role: user.email === ADMIN_EMAIL ? 'super_admin' : 'user',
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
           });
@@ -214,7 +216,28 @@ export default function Auth() {
         }
 
       } else {
-        await signInWithEmailAndPassword(auth, email, password);
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+
+        // Ensure admin user has super_admin role in Firestore
+        if (user.email === ADMIN_EMAIL) {
+          try {
+            const userDocRef = doc(db, 'users', user.uid);
+            const userDoc = await getDoc(userDocRef);
+            
+            if (!userDoc.exists() || userDoc.data()?.role !== 'super_admin') {
+              await setDoc(userDocRef, {
+                uid: user.uid,
+                name: 'Super Admin',
+                email: user.email,
+                role: 'super_admin',
+                updatedAt: new Date().toISOString()
+              }, { merge: true });
+            }
+          } catch (err) {
+            console.error("Error setting admin role:", err);
+          }
+        }
       }
     } catch (err: any) {
       console.error("Auth error:", err);
