@@ -19,7 +19,10 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
     return <Navigate to="/auth" state={{ from: location }} replace />;
   }
 
-  if (!isEmailVerified) {
+  const ADMIN_EMAIL = "info.realcipher@gmail.com";
+  const isAdmin = currentUser?.email === ADMIN_EMAIL;
+
+  if (!isEmailVerified && !isAdmin) {
     // Redirect to /auth with a special state to show verification message
     return <Navigate to="/auth" state={{ from: location, needsVerification: true }} replace />;
   }

@@ -49,8 +49,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       if (user) {
-        setLoading(true); // Ensure loading is true when we have a user but no data yet
-        // Subscribe to user data in Firestore
+        // We have a user, but we need to wait for their Firestore data
+        setLoading(true);
+        
         const userDocRef = doc(db, 'users', user.uid);
         unsubscribeData = onSnapshot(userDocRef, (docSnap) => {
           if (docSnap.exists()) {
@@ -61,9 +62,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setLoading(false);
         }, (error) => {
           console.error("Error fetching user data:", error);
+          // If there's an error fetching data, we still need to stop loading
+          // but we might want to keep the user logged in if it's just a temporary error
           setLoading(false);
         });
       } else {
+        // No user, definitely not loading anymore
         setUserData(null);
         setLoading(false);
       }

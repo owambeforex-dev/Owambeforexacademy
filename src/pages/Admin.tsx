@@ -4,7 +4,7 @@ import {
   Users, Upload, Download, TrendingUp, Activity, Settings, DollarSign, Check, X, 
   Search, Filter, MoreVertical, Shield, AlertTriangle, RefreshCcw, Ticket, Briefcase, 
   ChevronRight, MessageSquare, ExternalLink, UserCheck, UserX, Clock, Trash2,
-  Bell, Lock, Unlock, CreditCard, PieChart, BarChart3, Globe, Zap
+  Bell, Lock, Unlock, CreditCard, PieChart, BarChart3, Globe, Zap, LogOut
 } from 'lucide-react';
 import { db, auth } from '../firebase/firebase';
 import { 
@@ -23,6 +23,7 @@ const ADMIN_TABS = [
   { id: 'subscriptions', label: 'Subscriptions', icon: Zap },
   { id: 'logs', label: 'Audit Logs', icon: Activity },
   { id: 'settings', label: 'Settings', icon: Settings },
+  { id: 'security', label: 'Security', icon: Shield },
 ];
 
 export default function AdminDashboard() {
@@ -133,7 +134,13 @@ export default function AdminDashboard() {
     }
   };
 
-  if (loading) return null;
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-bg-primary flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-brand-primary border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="pt-24 pb-12 min-h-screen bg-bg-primary">
@@ -660,6 +667,77 @@ export default function AdminDashboard() {
                         </div>
                       </button>
                     ))}
+                  </div>
+                </div>
+
+                <div className="bg-surface rounded-3xl p-8 border border-border-base shadow-sm lg:col-span-2">
+                  <h3 className="text-xl font-bold text-text-primary mb-8 flex items-center gap-3">
+                    <Shield size={22} className="text-brand-primary" />
+                    Security & Session Management
+                  </h3>
+                  <div className="flex flex-col md:flex-row items-center justify-between gap-6 p-6 bg-bg-secondary/50 rounded-2xl border border-border-base">
+                    <div>
+                      <p className="text-sm font-bold text-text-primary">Admin Session Control</p>
+                      <p className="text-xs text-text-muted mt-1">Manage your administrative session and security protocols.</p>
+                    </div>
+                    <button 
+                      onClick={() => setActiveTab('security')}
+                      className="px-8 py-3 bg-brand-primary text-bg-primary font-bold rounded-xl shadow-lg shadow-brand-primary/20 hover:scale-105 transition-all flex items-center gap-2"
+                    >
+                      <Lock size={16} />
+                      Manage Security
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+            {activeTab === 'security' && (
+              <div className="max-w-2xl mx-auto">
+                <div className="bg-surface rounded-3xl p-8 border border-border-base shadow-sm">
+                  <h3 className="text-xl font-bold text-text-primary mb-8 flex items-center gap-3">
+                    <Shield size={22} className="text-brand-primary" />
+                    Security & Session Management
+                  </h3>
+                  
+                  <div className="space-y-8">
+                    <div className="p-6 bg-bg-secondary/50 rounded-2xl border border-border-base">
+                      <div className="flex items-center justify-between mb-4">
+                        <div>
+                          <p className="text-sm font-bold text-text-primary">Admin Session</p>
+                          <p className="text-xs text-text-muted mt-1">You are currently logged in as a Super Administrator.</p>
+                        </div>
+                        <div className="px-3 py-1 bg-success/10 text-success rounded-lg text-[10px] font-bold uppercase tracking-wider">
+                          Active Session
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3 text-xs text-text-secondary">
+                        <div className="w-2 h-2 bg-success rounded-full animate-pulse"></div>
+                        Last active: {new Date().toLocaleTimeString()}
+                      </div>
+                    </div>
+
+                    <div className="border-t border-border-base pt-8">
+                      <h4 className="text-sm font-bold text-text-primary mb-4">Session Actions</h4>
+                      <p className="text-xs text-text-muted mb-6">
+                        Logging out will terminate your current administrative session. You will need to re-authenticate to access the admin panel.
+                      </p>
+                      
+                      <button 
+                        onClick={async () => {
+                          try {
+                            await auth.signOut();
+                            navigate('/auth', { replace: true });
+                            showToast('Logged out successfully');
+                          } catch (err) {
+                            showToast('Logout failed', 'error');
+                          }
+                        }}
+                        className="w-full py-4 bg-error text-white font-bold rounded-2xl hover:bg-error/90 transition-all shadow-lg shadow-error/20 flex items-center justify-center gap-2"
+                      >
+                        <LogOut size={18} />
+                        Terminate Admin Session
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
