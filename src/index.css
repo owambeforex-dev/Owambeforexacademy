@@ -432,6 +432,38 @@
   box-shadow: 0 0 20px rgba(255, 162, 0, 0.15);
 }
 
+/* Custom scrollbar for auth internal scroll */
+.auth-scroll {
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: #ffa200 transparent;
+}
+
+.auth-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.auth-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.auth-scroll::-webkit-scrollbar-thumb {
+  background: #ffa200;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.auth-scroll::-webkit-scrollbar-thumb:hover {
+  background: #ffc14d;
+}
+
+@media (max-width: 640px) {
+  .auth-scroll::-webkit-scrollbar {
+    display: none;
+  }
+  .auth-scroll {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
 /* Hide scrollbar for clean UI */
 ::-webkit-scrollbar {
   width: 8px;
